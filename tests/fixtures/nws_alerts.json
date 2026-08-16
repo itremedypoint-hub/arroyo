@@ -1,0 +1,12 @@
+{"features": [
+  {"id": "urn:1", "properties": {"id": "urn:1", "event": "Flash Flood Warning",
+    "headline": "Flash Flood Warning for the Eaton burn scar until 4:15 PM PST",
+    "areaDesc": "Los Angeles County Mountains", "onset": "2026-08-15T18:00:00Z",
+    "ends": "2026-08-16T00:15:00Z", "description": "Debris flows possible on recent burn scars."}},
+  {"id": "urn:2", "properties": {"id": "urn:2", "event": "Flash Flood Watch",
+    "headline": "Watch elsewhere", "areaDesc": "San Diego County Valleys",
+    "onset": null, "ends": null, "description": "n/a"}},
+  {"id": "urn:3", "properties": {"id": "urn:3", "event": "Heat Advisory",
+    "headline": "Hot in LA", "areaDesc": "Los Angeles County Coast",
+    "onset": null, "ends": null, "description": "heat"}}
+]}

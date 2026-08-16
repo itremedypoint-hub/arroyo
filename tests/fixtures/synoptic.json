@@ -1,0 +1,8 @@
+{"_names": {"EATC1": "Eaton Wash (fixture)"},
+ "STATION": [
+  {"STID": "EATC1", "LATITUDE": "34.19", "LONGITUDE": "-118.10",
+   "OBSERVATIONS": {"date_time": ["2026-08-15T19:15:00Z", "2026-08-15T19:30:00Z", "2026-08-15T19:45:00Z"],
+                    "precip_intervals_set_1d": [1.0, 2.5, null]}},
+  {"STID": "DEADG", "LATITUDE": "34.20", "LONGITUDE": "-118.12",
+   "OBSERVATIONS": {"date_time": ["2026-08-15T19:45:00Z"], "precip_intervals_set_1d": [null]}}
+]}

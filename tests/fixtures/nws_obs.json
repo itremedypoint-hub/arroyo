@@ -1,0 +1,11 @@
+{"observations": [
+  {"id": "FIX1", "name": "Fixture Gauge mm",
+   "payload": {"properties": {"timestamp": "2026-08-15T19:45:00+00:00",
+     "precipitationLastHour": {"value": 6.0, "unitCode": "wmoUnit:mm"}}}},
+  {"id": "FIX2", "name": "Fixture Gauge meters",
+   "payload": {"properties": {"timestamp": "2026-08-15T19:45:00+00:00",
+     "precipitationLastHour": {"value": 0.009, "unitCode": "wmoUnit:m"}}}},
+  {"id": "FIX3", "name": "Fixture Gauge null",
+   "payload": {"properties": {"timestamp": "2026-08-15T19:45:00+00:00",
+     "precipitationLastHour": {"value": null, "unitCode": "wmoUnit:mm"}}}}
+]}

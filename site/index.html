@@ -1,0 +1,1429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'self'; base-uri 'none'; form-action 'none'">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#131C2B">
+<title>Arroyo — read the mountain</title>
+<meta name="description" content="A trilingual literacy tool for post-fire debris-flow rainfall thresholds on the Eaton burn scar. Supplements official alerts — never replaces them.">
+<style>
+/* ============ Dusk-lithograph identity ============ */
+:root{
+  --ink:#131C2B; --ink2:#1B2739; --ink3:#243247; --line:#3A4A63;
+  --paper:#F2EDE2; --paper-dim:#C9C3B2; --paper-faint:#9BA0A8;
+  --poppy:#E8A33B; --poppy-deep:#B97A19; --poppy-ink:#241A08;
+  --clear:#7FA98C; --advisory:#D8C25A; --watch:#E8A33B; --warning:#D96A45;
+  --focus:#FFD98A;
+  --step:1rem;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+html,body{background:var(--ink) !important}
+body{margin:0;color:var(--paper);
+  /* the artifact/webview shell can override body background; #page owns the canvas */
+  font:400 16px/1.55 -apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  -webkit-font-smoothing:antialiased}
+body.large{font-size:19px}
+h1,h2,h3,.display{font-family:Georgia,"Iowan Old Style","Times New Roman",serif;font-weight:400;letter-spacing:.01em;margin:0 0 .35em}
+h1{font-size:clamp(2rem,6vw,3.1rem);line-height:1.08}
+h2{font-size:clamp(1.35rem,3.5vw,1.8rem)}
+h3{font-size:1.08rem}
+.eyebrow{font:600 .72rem/1 -apple-system,"Segoe UI",Roboto,sans-serif;letter-spacing:.22em;text-transform:uppercase;color:var(--poppy);margin:0 0 .8rem}
+.num{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-variant-numeric:tabular-nums}
+a{color:var(--poppy)}
+a:hover{color:var(--focus)}
+p{margin:.4em 0 .9em}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px;border-radius:2px}
+.skip{position:absolute;left:-999px;top:0;background:var(--poppy);color:var(--poppy-ink);padding:.6rem 1rem;z-index:99;font-weight:600}
+.skip:focus{left:.5rem;top:.5rem}
+#page{background:var(--ink);color:var(--paper);min-height:100vh;min-height:100svh}
+.wrap{max-width:1060px;margin:0 auto;padding:0 clamp(.9rem,3vw,1.6rem)}
+section{padding:2.6rem 0;border-top:1px solid var(--ink3)}
+/* ---- top rail: the boundary, before anything else ---- */
+.rail{background:var(--ink2);border-bottom:1px solid var(--line);font-size:.9rem;padding:.55rem 0}
+.rail .wrap{display:flex;flex-wrap:wrap;gap:.35rem .9rem;align-items:baseline}
+.rail strong{color:var(--poppy);font-weight:600}
+.rail a{white-space:nowrap}
+/* ---- header ---- */
+header.site{padding:1.1rem 0 .4rem}
+header.site .wrap{display:flex;flex-wrap:wrap;gap:.8rem 1.2rem;align-items:center;justify-content:space-between}
+.wordmark{display:flex;align-items:baseline;gap:.7rem}
+.wordmark b{font-family:Georgia,serif;font-weight:400;font-size:1.7rem;letter-spacing:.04em}
+.wordmark span{color:var(--paper-dim);font-size:.92rem}
+.controls{display:flex;gap:.5rem;flex-wrap:wrap}
+.controls select,.controls button{background:var(--ink3);border:1px solid var(--line);color:var(--paper);
+  border-radius:6px;padding:.5rem .7rem;min-height:44px;min-width:44px}
+.controls button[aria-pressed="true"]{background:var(--poppy);color:var(--poppy-ink);border-color:var(--poppy)}
+/* ---- banners ---- */
+.banner{border:1px solid var(--poppy-deep);background:var(--ink2);
+  border-left:6px solid var(--poppy);border-radius:8px;padding:.8rem 1rem;margin:1rem 0;font-size:.95rem}
+.banner b{color:var(--poppy);letter-spacing:.08em}
+/* ---- hero ---- */
+.hero{display:grid;gap:2rem;grid-template-columns:1fr;align-items:center;padding:2.2rem 0 2.6rem}
+@media(min-width:820px){.hero{grid-template-columns:300px 1fr}}
+.hero .lede{font-size:1.08rem;color:var(--paper-dim);max-width:56ch}
+.ring-cap{font-size:.85rem;color:var(--paper-dim);text-align:center;margin-top:.5rem}
+/* ---- chips ---- */
+.chips{display:flex;flex-wrap:wrap;gap:.5rem;margin:.8rem 0 1.2rem}
+.chip{background:var(--ink3);border:1px solid var(--line);border-radius:999px;padding:.55rem .95rem;min-height:44px;font-size:.92rem}
+.chip[aria-pressed="true"]{background:var(--poppy);color:var(--poppy-ink);border-color:var(--poppy);font-weight:600}
+/* ---- reader card ---- */
+.card{background:var(--ink2);border:1px solid var(--line);border-radius:12px;padding:1.1rem 1.2rem 1.3rem}
+.card+.card{margin-top:1rem}
+.provrow{display:flex;flex-wrap:wrap;gap:.4rem;margin:.4rem 0 1rem}
+.badge{font-size:.72rem;letter-spacing:.06em;border:1px solid var(--line);border-radius:4px;padding:.22rem .5rem;color:var(--paper-dim)}
+.badge.train{border-color:var(--poppy-deep);color:var(--poppy)}
+.badge.live{border-color:var(--clear);color:var(--clear)}
+.grid2{display:grid;gap:1.4rem;grid-template-columns:1fr}
+@media(min-width:880px){.grid2{grid-template-columns:1.1fr .9fr}}
+fieldset{border:1px solid var(--line);border-radius:8px;margin:0 0 1rem;padding:.7rem .9rem}
+legend{font-size:.8rem;letter-spacing:.14em;text-transform:uppercase;color:var(--paper-dim);padding:0 .4rem}
+.seasons label,.quick button{display:inline-flex;align-items:center;gap:.45rem;margin:.25rem .9rem .25rem 0;min-height:44px}
+.quick{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.5rem}
+.quick button{background:var(--ink3);border:1px solid var(--line);border-radius:6px;padding:.4rem .7rem;font-size:.88rem}
+input[type=number]{background:var(--ink);border:1px solid var(--line);color:var(--paper);border-radius:6px;
+  padding:.55rem .7rem;font-size:1.15rem;width:8.5rem;min-height:44px}
+input[type=radio],input[type=checkbox]{width:22px;height:22px;accent-color:var(--poppy)}
+.hint{font-size:.85rem;color:var(--paper-faint)}
+/* ---- tier ladder (signature) ---- */
+.ladder{list-style:none;margin:1rem 0;padding:0;display:grid;gap:.45rem}
+.rung{display:grid;grid-template-columns:12px 1fr auto;gap:.7rem;align-items:center;
+  border:1px solid var(--line);border-radius:8px;padding:.55rem .8rem;background:var(--ink)}
+.rung .dot{width:12px;height:12px;border-radius:50%}
+.rung small{display:block;color:var(--paper-faint)}
+.rung .thr{color:var(--paper-dim)}
+.rung.active{border-width:2px;background:var(--ink3)}
+.rung[data-tier=all_clear] .dot{background:var(--clear)} .rung[data-tier=all_clear].active{border-color:var(--clear)}
+.rung[data-tier=advisory] .dot{background:var(--advisory)} .rung[data-tier=advisory].active{border-color:var(--advisory)}
+.rung[data-tier=watch] .dot{background:var(--watch)} .rung[data-tier=watch].active{border-color:var(--watch)}
+.rung[data-tier=warning] .dot{background:var(--warning)} .rung[data-tier=warning].active{border-color:var(--warning)}
+.readout{font-size:1.02rem;background:var(--ink);border:1px solid var(--line);border-left:6px solid var(--poppy);
+  border-radius:8px;padding:.8rem 1rem;margin:.6rem 0 0}
+.readout .pct{font-size:1.5rem}
+.hw{font-size:.82rem;color:var(--paper-faint);margin-top:.5rem}
+/* ---- sim ---- */
+.trainframe{border:2px dashed var(--poppy);border-radius:12px;padding:1rem 1.1rem;position:relative;margin-top:1rem}
+.trainframe::before{content:attr(data-label);position:absolute;top:-.8em;left:1rem;background:var(--ink);
+  padding:0 .5rem;color:var(--poppy);font-size:.75rem;letter-spacing:.2em;font-weight:700}
+.simrow{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;margin:.6rem 0}
+.simrow select,.simrow button{background:var(--ink3);border:1px solid var(--line);color:var(--paper);border-radius:6px;padding:.5rem .8rem;min-height:44px}
+.simrow button.primary{background:var(--poppy);color:var(--poppy-ink);border-color:var(--poppy);font-weight:600}
+table{border-collapse:collapse;width:100%;font-size:.9rem;margin-top:.6rem}
+th,td{border-bottom:1px solid var(--ink3);padding:.45rem .5rem;text-align:left}
+th{color:var(--paper-dim);font-weight:600;font-size:.78rem;letter-spacing:.08em;text-transform:uppercase}
+/* ---- literacy cards ---- */
+.cards3{display:grid;gap:1rem;grid-template-columns:1fr}
+@media(min-width:820px){.cards3{grid-template-columns:repeat(3,1fr)}}
+.cards3 .card{border-top:4px solid var(--poppy)}
+.cards3 .who{font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;color:var(--paper-dim)}
+.cards3 .do{background:var(--ink);border-radius:6px;padding:.5rem .7rem;margin:.6rem 0 0;font-size:.92rem}
+/* ---- details ---- */
+details{border:1px solid var(--line);border-radius:8px;background:var(--ink2);margin:.55rem 0}
+summary{cursor:pointer;padding:.8rem 1rem;font-weight:600;list-style:none;min-height:44px;display:flex;align-items:center;gap:.6rem}
+summary::before{content:"+";color:var(--poppy);font-weight:700;width:1em}
+details[open] summary::before{content:"–"}
+details .body{padding:0 1rem 1rem;color:var(--paper-dim)}
+details .body p{max-width:70ch}
+.formula{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--ink);border:1px solid var(--line);
+  border-radius:6px;padding:.6rem .8rem;overflow:auto;font-size:.88rem;color:var(--paper)}
+.langnote{font-size:.82rem;color:var(--poppy);margin:.2rem 0 .6rem}
+/* ---- resources / status ---- */
+.res{display:grid;gap:.8rem;grid-template-columns:1fr}
+@media(min-width:760px){.res{grid-template-columns:1fr 1fr}}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:.25rem .9rem;font-size:.92rem}
+.kv dt{color:var(--paper-faint)}
+.kv dd{margin:0}
+/* ---- admin ---- */
+#admin .locked p{max-width:60ch}
+#admin input[type=password]{background:var(--ink);border:1px solid var(--line);color:var(--paper);border-radius:6px;padding:.55rem .7rem;min-height:44px;width:14rem}
+#admin textarea{width:100%;min-height:9rem;background:var(--ink);color:var(--paper);border:1px solid var(--line);border-radius:6px;padding:.6rem;font-family:ui-monospace,Menlo,monospace;font-size:.82rem}
+.admbtns{display:flex;flex-wrap:wrap;gap:.5rem;margin:.6rem 0}
+.admbtns button{background:var(--ink3);border:1px solid var(--line);border-radius:6px;padding:.55rem .8rem;min-height:44px}
+.ok{color:var(--clear)} .bad{color:var(--warning)} .warn{color:var(--advisory)}
+pre.out{background:var(--ink);border:1px solid var(--line);border-radius:6px;padding:.7rem;font-size:.8rem;overflow:auto;max-height:16rem}
+/* ---- footer ---- */
+footer{border-top:1px solid var(--ink3);padding:2rem 0 3rem;color:var(--paper-dim);font-size:.88rem}
+footer .rails{margin:.8rem 0}
+.visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (prefers-reduced-motion:no-preference){
+  body:not(.calm) .chip,body:not(.calm) .rung{transition:background .15s,border-color .15s}
+}
+</style>
+</head>
+<body>
+<div id="page">
+<a class="skip" href="#main" data-i18n="skip">Skip to content</a>
+
+<!-- Rail: the boundary, stated before the product (safety rail 4) -->
+<div class="rail" role="region" aria-label="Official alert sources">
+  <div class="wrap">
+    <strong data-i18n="rail.head">Arroyo supplements official alerts — it never replaces them.</strong>
+    <span data-i18n="rail.act">Act on:</span>
+    <a href="https://alert.lacounty.gov" target="_blank" rel="noopener noreferrer">Alert LA County</a>
+    <a href="https://www.weather.gov/lox/" target="_blank" rel="noopener noreferrer">NWS Los Angeles/Oxnard</a>
+    <a href="https://protect.genasys.com" target="_blank" rel="noopener noreferrer">Genasys Protect</a>
+  </div>
+</div>
+
+<header class="site">
+  <div class="wrap">
+    <div class="wordmark"><b>ARROYO</b><span data-i18n="tagline">The mountain’s seasons, on your street.</span></div>
+    <div class="controls">
+      <label class="visually-hidden" for="lang" data-i18n="a11y.lang">Language</label>
+      <select id="lang" aria-label="Language / Idioma / 语言">
+        <option value="en">English</option><option value="es">Español</option><option value="zh">中文（简体）</option>
+      </select>
+      <button id="largeType" aria-pressed="false" data-i18n="ctl.large">Large type</button>
+      <button id="calm" aria-pressed="false" data-i18n="ctl.calm">Calm motion</button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="banner" id="modeBanner" role="status">
+    <b data-i18n="train.tag">TRAINING DATA</b> — <span data-i18n="train.body">the basin numbers below are synthetic examples for learning the interface. They are not USGS values. A maintainer loads the official USGS Eaton assessment before public use.</span>
+  </div>
+</div>
+
+<main id="main" class="wrap">
+
+<!-- ============ HERO ============ -->
+<div class="hero">
+  <div>
+    <svg id="seasonRing" viewBox="0 0 220 220" width="100%" role="img" aria-labelledby="ringTitle ringDesc">
+      <title id="ringTitle">Season ring</title>
+      <desc id="ringDesc">A twelve-month ring. The wet season, November through March, is marked in poppy gold. A marker shows today, August 15, in post-fire year two.</desc>
+      <circle cx="110" cy="110" r="86" fill="none" stroke="#3A4A63" stroke-width="10"/>
+      <!-- wet season arc Nov 1 → Mar 31: Jan at 12 o'clock, clockwise, 30°/month.
+           Nov 1 = 300°: (110+86·sin300, 110−86·cos300) = (35.5, 67)
+           Mar 31 ≈ 120°: (184.5, 153); 180° sweep, clockwise (sweep-flag 1). -->
+      <path d="M 35.5 67 A 86 86 0 0 1 184.5 153" fill="none" stroke="#E8A33B" stroke-width="10" stroke-linecap="round"/>
+      <g font-family="ui-monospace,Menlo,monospace" font-size="9" fill="#9BA0A8" text-anchor="middle">
+        <text x="110" y="16">JAN</text><text x="204" y="114">APR</text><text x="110" y="212">JUL</text><text x="16" y="114">OCT</text>
+      </g>
+      <!-- today marker: Aug 15 ≈ month 7.5/12 → angle 225° from Jan-top clockwise -->
+      <g transform="rotate(225 110 110)"><circle cx="110" cy="24" r="7" fill="#F2EDE2"/></g>
+      <text x="110" y="102" text-anchor="middle" font-family="Georgia,serif" font-size="15" fill="#F2EDE2" data-i18n="ring.year">Post-fire year 2</text>
+      <text x="110" y="122" text-anchor="middle" font-size="10" fill="#C9C3B2" data-i18n="ring.season">wet season ahead: Nov–Mar</text>
+    </svg>
+    <p class="ring-cap" data-i18n="ring.cap">The Eaton scar’s second wet season begins this November.</p>
+  </div>
+  <div>
+    <p class="eyebrow" data-i18n="hero.eyebrow">Eaton burn scar · San Gabriel foothills</p>
+    <h1 data-i18n="hero.h1">Read the mountain.</h1>
+    <p class="lede" data-i18n="hero.lede">After a fire, burned slopes can turn heavy rain into debris flows. The USGS publishes the rainfall trigger for each canyon; the county and the National Weather Service issue the warnings. Arroyo teaches you to read all of it — what the trigger for your basin means, how close a storm is getting, and exactly which official alert to act on. In English, Spanish, and Chinese.</p>
+    <p class="lede"><span data-i18n="hero.steps">Three steps: pick your canyon, set a rain rate, read the ladder.</span></p>
+  </div>
+</div>
+
+<!-- ============ READER ============ -->
+<section id="reader" aria-labelledby="readerH">
+  <p class="eyebrow" data-i18n="reader.eyebrow">The threshold reader</p>
+  <h2 id="readerH" data-i18n="reader.h2">How close is the rain to your canyon’s trigger?</h2>
+  <p class="hint" data-i18n="reader.note">Arroyo’s tiers are reading aids for published thresholds. They are not official products, and no tier here ever tells you that you are safe.</p>
+
+  <div class="chips" id="basinChips" role="group" aria-label="Basins"></div>
+
+  <div class="card">
+    <h3 id="bName" class="display"></h3>
+    <p class="hint" id="bComm"></p>
+    <div class="provrow" id="provRow"></div>
+
+    <div class="grid2">
+      <div>
+        <fieldset class="seasons">
+          <legend data-i18n="reader.season">Season</legend>
+          <label><input type="radio" name="year" value="1"> <span data-i18n="reader.y1">2025–26 (year 1 · P50 trigger)</span></label>
+          <label><input type="radio" name="year" value="2" checked> <span data-i18n="reader.y2">2026–27 (year 2 · P75 trigger)</span></label>
+          <p class="hint" id="y2note"></p>
+        </fieldset>
+
+        <fieldset>
+          <legend data-i18n="reader.rain">Rain rate</legend>
+          <label for="intensity"><span data-i18n="reader.i15">15-minute intensity</span> (mm/h)</label><br>
+          <input id="intensity" type="number" min="0" max="120" step="0.1" value="12" inputmode="decimal">
+          <p class="hint" id="accEq"></p>
+          <div class="quick" id="quick"></div>
+        </fieldset>
+      </div>
+
+      <div>
+        <ul class="ladder" id="ladder" aria-live="polite"></ul>
+        <div class="readout" id="readout"></div>
+        <p class="hw" id="hwLine"></p>
+      </div>
+    </div>
+
+    <h3 style="margin-top:1.4rem" data-i18n="curve.h">The likelihood curve behind the trigger</h3>
+    <p class="hint" data-i18n="curve.cap">The USGS M1 model (Staley et al., 2017) links rain to debris-flow likelihood. Arroyo draws each basin’s curve from its published trigger — the dot at 50% (or 75% in year 2) is the number above.</p>
+    <svg id="curve" viewBox="0 0 560 240" width="100%" role="img" aria-label="Likelihood versus rainfall intensity curve for the selected basin"></svg>
+  </div>
+</section>
+
+<!-- ============ SIMULATOR ============ -->
+<section id="sim" aria-labelledby="simH">
+  <p class="eyebrow" data-i18n="sim.eyebrow">Practice</p>
+  <h2 id="simH" data-i18n="sim.h2">Storm trainer</h2>
+  <p data-i18n="sim.lede">Replay a storm shape against the selected basin, fifteen minutes at a time. Training runs are sandboxed: they never touch the live reading above.</p>
+  <div class="trainframe" data-label="TRAINING MODE" id="trainframe">
+    <div class="simrow">
+      <label for="preset" class="visually-hidden" data-i18n="sim.preset">Storm preset</label>
+      <select id="preset">
+        <option value="soak" data-i18n="sim.p1">Steady soak (gentle, long)</option>
+        <option value="ar" data-i18n="sim.p2">Atmospheric river (long, strong)</option>
+        <option value="burst" data-i18n="sim.p3">Cloudburst on the scar (short, intense)</option>
+      </select>
+      <button class="primary" id="simStart" data-i18n="sim.start">Start</button>
+      <button id="simStep" data-i18n="sim.step" disabled>Advance 15 min</button>
+      <button id="simExit" data-i18n="sim.exit" disabled>Exit training</button>
+    </div>
+    <div id="simOut" aria-live="polite"></div>
+  </div>
+</section>
+
+<!-- ============ LIVE OBSERVATIONS (CI snapshots, same-origin only) ============ -->
+<section id="live" aria-labelledby="liveH">
+  <p class="eyebrow" data-i18n="live.eyebrow">On the mountain right now</p>
+  <h2 id="liveH" data-i18n="live.h2">Official alerts and observed rain</h2>
+  <p data-i18n="live.lede">Two snapshots, refreshed by a background job and stamped with their age: what the National Weather Service currently has in effect, and what nearby gauges last measured. Numbers here are observations, never Arroyo tiers.</p>
+  <div class="grid2">
+    <div class="card" id="alertsCard">
+      <h3 data-i18n="live.alerts">Active NWS products — Los Angeles County</h3>
+      <div id="alertsBody"></div>
+      <p class="hint" data-i18n="live.alertsNote">This list can lag the source. The moment it matters, read the office directly:</p>
+      <p><a href="https://www.weather.gov/lox/" target="_blank" rel="noopener noreferrer">weather.gov/lox</a> · <a href="https://alert.lacounty.gov" target="_blank" rel="noopener noreferrer">alert.lacounty.gov</a></p>
+    </div>
+    <div class="card" id="rainCard">
+      <h3 data-i18n="live.rain">Observed rain near the scar</h3>
+      <div id="rainBody"></div>
+      <p class="hint" data-i18n="live.rainNote">Shown as plain numbers on purpose — no colors, no tiers. Press a rate to read it against your basin's trigger in the reader above; nothing is ever applied automatically.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ LITERACY ============ -->
+<section id="literacy" aria-labelledby="litH">
+  <p class="eyebrow" data-i18n="lit.eyebrow">The literacy core</p>
+  <h2 id="litH" data-i18n="lit.h2">How to read a warning</h2>
+  <p data-i18n="lit.lede">Three official products cover this hazard. Learn the names, who issues each, and what each asks of you. Arroyo issues none of them.</p>
+  <div class="cards3">
+    <div class="card">
+      <p class="who" data-i18n="lit.nws">Issued by the National Weather Service</p>
+      <h3 data-i18n="lit.w1">Flash Flood Watch</h3>
+      <p class="hint" data-i18n="lit.w1d">Conditions are favorable. Debris flows on burn scars are possible in the watch window.</p>
+      <p class="do" data-i18n="lit.w1do">Prepare: check your evacuation zone, fuel the car, review your plan.</p>
+      <p><a href="https://www.weather.gov/lox/" target="_blank" rel="noopener noreferrer" data-i18n="lit.link">See the official source</a></p>
+    </div>
+    <div class="card">
+      <p class="who" data-i18n="lit.nws">Issued by the National Weather Service</p>
+      <h3 data-i18n="lit.w2">Flash Flood Warning</h3>
+      <p class="hint" data-i18n="lit.w2d">Flooding or debris flow is happening or imminent. On a burn scar this is the most urgent NWS product.</p>
+      <p class="do" data-i18n="lit.w2do">Act now: move away from channels and canyon mouths; do not wait to see water.</p>
+      <p><a href="https://www.weather.gov/lox/" target="_blank" rel="noopener noreferrer" data-i18n="lit.link">See the official source</a></p>
+    </div>
+    <div class="card">
+      <p class="who" data-i18n="lit.county">Issued by Los Angeles County</p>
+      <h3 data-i18n="lit.w3">Evacuation Warning → Order</h3>
+      <p class="hint" data-i18n="lit.w3d">A Warning means be ready to leave — people who need more time should go now. An Order means leave immediately.</p>
+      <p class="do" data-i18n="lit.w3do">Know your zone at Genasys Protect before the storm, and follow Alert LA County.</p>
+      <p><a href="https://protect.genasys.com" target="_blank" rel="noopener noreferrer" data-i18n="lit.link2">Find your zone</a></p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FIELD NOTES ============ -->
+<section id="notes" aria-labelledby="notesH">
+  <p class="eyebrow" data-i18n="fn.eyebrow">Field notes</p>
+  <h2 id="notesH" data-i18n="fn.h2">The science, in plain terms</h2>
+  <p class="langnote" id="fnLangNote" hidden data-i18n="fn.langnote">These notes are in English for now — translations are under community review.</p>
+  <div id="fieldnotes" lang="en">
+    <details><summary>Why burned slopes fail</summary><div class="body">
+      <p>Fire does two things to a hillside: it removes the plants that slow water down, and intense heat can make the top layer of soil water-repellent. The next hard rain doesn’t soak in — it runs off, fast, picking up ash, gravel, and then boulders as it converges into the canyons (the arroyos this tool is named for). That slurry is a debris flow. It moves faster than a person and arrives with little local warning, which is why the whole system runs on rainfall thresholds rather than on watching the channel.</p>
+    </div></details>
+    <details><summary>I15 — why fifteen minutes is the number that matters</summary><div class="body">
+      <p>Post-fire debris flows are triggered by short bursts of intense rain, not by storm totals. The USGS therefore publishes triggers as a 15-minute intensity, written as mm/h: rain falling at 24&nbsp;mm/h for fifteen minutes is 6&nbsp;mm of water — about a quarter inch — in that window. A long gentle storm can drop far more total water than a ten-minute cloudburst and pose far less debris-flow danger. When you hear a forecast “rate,” it is this kind of number.</p>
+    </div></details>
+    <details><summary>The year-2 convention, with the arithmetic shown</summary><div class="body">
+      <p>In the first winter after a fire, practice keyed to the USGS assessment uses the rainfall that gives a 50% modeled likelihood (P50) as the trigger. As slopes begin to recover, the second winter conventionally moves to P75 — more rain is needed for the same concern. On the M1 model’s logistic curve, that shift is the same multiplier for every basin:</p>
+      <p class="formula">R75 / R50 = 1 + ln(3) / 3.63 = 1.3026…</p>
+      <p>so a year-1 trigger of 20&nbsp;mm/h becomes 26.1&nbsp;mm/h in year 2. Arroyo applies the factor to the trigger — never to the rain — and if the USGS publishes an updated Eaton assessment, those published numbers replace this convention outright. Current USGS research (Graber et al., 2026) is moving toward recovery-based updates of exactly this kind.</p>
+    </div></details>
+    <details><summary>Rubio Canyon, February 2025 — the season this tool is built around</summary><div class="body">
+      <p>In the first winter after the Eaton Fire, mid-February storms sent mud and debris out of the western canyons into Altadena streets, most memorably along Tanoble Drive below Rubio Canyon. Nobody had to guess whether burned basins could reach houses: the flows demonstrated it, in year one, at rain rates within the range the assessments contemplate. The second winter — the one ahead — is the season the year-2 convention above exists for.</p>
+    </div></details>
+    <details><summary>What Arroyo is not</summary><div class="body">
+      <p>Arroyo never issues a warning and never clears one; no tier here means “safe.” Its tiers are computed only from rainfall numbers against published thresholds — photos, reports, and hunches never move them. Every tier links out to Alert LA County, the National Weather Service, and Genasys Protect, because those are the products to act on. This page collects no personal data: no accounts, no location permission, no analytics, no cookies.</p>
+    </div></details>
+    <details><summary>Where the numbers come from — and what the training label means</summary><div class="body">
+      <p>In live mode, every trigger on this page traces to a named field in the USGS post-fire debris-flow hazard assessment for the Eaton Fire (King et al., 2025, DOI 10.5066/P14EWYME), which conforms to the PWFDF data specification (DOI 10.5066/P13KUWCO). The provenance badge on the basin card shows the dataset version and retrieval date. When the badge instead reads TRAINING, the structure is real but the numbers are synthetic teaching examples — the maintainer loads the official dataset before the site is used publicly, and the banner at the top of the page disappears only then.</p>
+    </div></details>
+  </div>
+</section>
+
+<!-- ============ RESOURCES ============ -->
+<section id="resources" aria-labelledby="resH">
+  <p class="eyebrow" data-i18n="res.eyebrow">Before the storm</p>
+  <h2 id="resH" data-i18n="res.h2">Resources that matter in this hazard</h2>
+  <div class="res">
+    <div class="card"><h3 data-i18n="res.r1">Know your evacuation zone</h3><p class="hint" data-i18n="res.r1d">Look up your zone once, on a dry day, and write it down.</p><p><a href="https://protect.genasys.com" target="_blank" rel="noopener noreferrer">protect.genasys.com</a></p></div>
+    <div class="card"><h3 data-i18n="res.r2">Sign up for county alerts</h3><p class="hint" data-i18n="res.r2d">Alert LA County delivers evacuation warnings and orders to your phone.</p><p><a href="https://alert.lacounty.gov" target="_blank" rel="noopener noreferrer">alert.lacounty.gov</a></p></div>
+    <div class="card"><h3 data-i18n="res.r3">The flood-insurance mudflow trap</h3><p class="hint" data-i18n="res.r3d">Standard homeowners policies exclude flood and mudflow; NFIP flood policies cover “mudflow” and typically take 30 days to start. Ask before the rain.</p><p><a href="https://www.floodsmart.gov" target="_blank" rel="noopener noreferrer">floodsmart.gov</a></p></div>
+    <div class="card"><h3 data-i18n="res.r4">Sandbags and help</h3><p class="hint" data-i18n="res.r4d">LA County Public Works posts seasonal sandbag locations; 211 LA connects any other need, in your language.</p><p><a href="https://pw.lacounty.gov" target="_blank" rel="noopener noreferrer">pw.lacounty.gov</a> · <a href="https://211la.org" target="_blank" rel="noopener noreferrer">211la.org</a></p></div>
+  </div>
+</section>
+
+<!-- ============ STATUS / METHODS ============ -->
+<section id="status" aria-labelledby="stH">
+  <p class="eyebrow" data-i18n="st.eyebrow">Provenance</p>
+  <h2 id="stH" data-i18n="st.h2">Status &amp; methods</h2>
+  <div class="grid2">
+    <div class="card">
+      <h3 data-i18n="st.data">Dataset</h3>
+      <dl class="kv" id="statusKV"></dl>
+      <p class="hint" id="selfCheckLine" role="status"></p>
+    </div>
+    <div class="card">
+      <h3 data-i18n="st.cite">Methods &amp; citations</h3>
+      <p class="hint">Staley, D.M., et al. (2017). <i>Prediction of spatially explicit rainfall intensity–duration thresholds for post-fire debris-flow generation in the western United States.</i> Geomorphology 278.</p>
+      <p class="hint">King, J.M., Kostelnik, J., Kean, J.W., Barnhart, K.R., Graber, A.P., Rengers, F.K., &amp; Thomas, M.A. (2025). <i>Eaton 2025-01-08 v1.0 postfire debris-flow hazard assessment.</i> USGS data release. DOI 10.5066/P14EWYME · Spec: PWFDF v1.0.0, DOI 10.5066/P13KUWCO.</p>
+      <p class="hint">Graber, A.P., Thomas, M.A., Kean, J.W., King, J., &amp; Kostelnik, J. (2026). <i>Characterizing changes in postfire debris-flow hazard as burned areas recover.</i> Geosphere. DOI 10.1130/GES02936.1.</p>
+      <p class="hint"><a href="https://apps.usgs.gov/landslides/pwfdf/" target="_blank" rel="noopener noreferrer">USGS post-fire debris-flow dashboard</a></p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ADMIN ============ -->
+<section id="admin" aria-labelledby="admH">
+  <p class="eyebrow" data-i18n="adm.eyebrow">Maintainer</p>
+  <h2 id="admH" data-i18n="adm.h2">QA console</h2>
+  <div class="card locked" id="admLocked">
+    <p data-i18n="adm.about">Quality-assurance tools for the site maintainer: an engine self-test against the independent verification oracle, a dataset inspector, and a session-only preview loader for candidate USGS datasets. This gate keeps casual visitors out of maintainer tools; it is not a security boundary — the site holds no secrets and no user data, and the real administrative control plane is the code repository.</p>
+    <label for="admPass" data-i18n="adm.pass">Maintainer passphrase</label><br>
+    <input type="password" id="admPass" autocomplete="off">
+    <button id="admGo" class="chip" data-i18n="adm.unlock">Unlock</button>
+    <p class="hint" id="admMsg" role="alert"></p>
+  </div>
+  <div class="card" id="admPanel" hidden>
+    <div class="admbtns">
+      <button id="admSelftest" data-i18n="adm.selftest">Run engine self-test</button>
+      <button id="admInspect" data-i18n="adm.inspect">Inspect dataset</button>
+      <button id="admExport" data-i18n="adm.export">Export current dataset</button>
+      <button id="admDiag" data-i18n="adm.diag">Diagnostics</button>
+      <button id="admLock" data-i18n="adm.lock">Lock console</button>
+    </div>
+    <label for="admJson" data-i18n="adm.loadlab">Paste a candidate basins_eaton.json to validate and preview (this session only — nothing is saved):</label>
+    <textarea id="admJson" spellcheck="false"></textarea>
+    <div class="admbtns"><button id="admValidate" data-i18n="adm.validate">Validate &amp; preview</button></div>
+    <pre class="out" id="admOut">—</pre>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p><b style="font-family:Georgia,serif">ARROYO</b> · <span data-i18n="tagline">The mountain’s seasons, on your street.</span></p>
+    <p class="rails" data-i18n="foot.rails">No push alerts. No “you are safe.” Instrument data drives tiers; reports and photos never do. Every tier links to the official sources above.</p>
+    <p data-i18n="foot.ai">This site’s interface and engine were generated with AI assistance (Claude, Anthropic) at the maintainer’s direction, August 2026, and are verified against an included independent oracle. It is a community education project, not an official product of any agency.</p>
+    <p class="num" id="buildLine"></p>
+  </div>
+</footer>
+</div><!-- /#page -->
+
+<script>
+"use strict";
+/* =====================================================================
+   ARROYO v2.0-community — single-file application
+   Engine and interface generated with AI assistance (Claude, Anthropic)
+   at the maintainer's direction, 2026-08-15. Engine correctness is
+   defined by verify/golden_vectors.json (independent oracle); the test
+   suite in /tests executes THIS file's engine block against it.
+   ===================================================================== */
+
+/*ARROYO_ENGINE_START*/
+const ARROYO = (() => {
+  const B = -3.63, CT = 0.41, CF = 0.67, CS = 0.70;      // Staley et al. 2017, M1, 15-min
+  const LN3 = Math.log(3);
+  const ADVISORY_FLOOR = 2.0;                             // mm/h
+  const WATCH_FRACTION = 0.60;
+  const TIER_ORDER = ["all_clear", "advisory", "watch", "warning"];
+  const logit = p => Math.log(p / (1 - p));
+  const sigmoid = x => 1 / (1 + Math.exp(-x));
+  const y2factor = () => 1 + LN3 / Math.abs(B);           // = 1.302648013407…
+  // Back-solve the basin curve steepness from a PUBLISHED threshold.
+  // Unit-invariant by construction: B is unit-free, so k absorbs the unit
+  // of i15 (mm/h here). If k were ever computed from raw covariates
+  // (CT*T+CF*F+CS*S), R MUST be 15-min ACCUMULATION in mm (USGS pfdf),
+  // and mm/h appears only at display time (×4).
+  const kFromThreshold = (i15, pStar = 0.5) => (logit(pStar) - B) / i15;
+  const pCurve = (R, k) => sigmoid(B + k * R);
+  const m1P = (T, F, S, Racc) => sigmoid(B + (CT * T + CF * F + CS * S) * Racc);
+  const m1R = (T, F, S, p) => (logit(p) - B) / (CT * T + CF * F + CS * S);
+  const accum15ToMmh = a => a * 4;
+  const inchesToMm = x => x * 25.4;
+  // Guarded tier ladder: monotone for ANY trigger (audit F5).
+  function thresholds(i15y1, year) {
+    const trigger = year === 2 ? i15y1 * y2factor() : i15y1;
+    const adv = ADVISORY_FLOOR;
+    const watch = Math.max(WATCH_FRACTION * trigger, adv);
+    const warn = Math.max(trigger, watch);
+    return { trigger, adv, watch, warn };
+  }
+  function classify(i15y1, year, I) {                     // boundaries inclusive (≥)
+    const t = thresholds(i15y1, year);
+    let tier = "all_clear";
+    if (I >= t.warn) tier = "warning";
+    else if (I >= t.watch) tier = "watch";
+    else if (I >= t.adv) tier = "advisory";
+    return { tier, fraction: I / t.trigger, ...t };
+  }
+  function haversineKm(lat1, lon1, lat2, lon2) {
+    const R = 6371.0088, r = Math.PI / 180;
+    const a = Math.sin((lat2 - lat1) * r / 2) ** 2 +
+      Math.cos(lat1 * r) * Math.cos(lat2 * r) * Math.sin((lon2 - lon1) * r / 2) ** 2;
+    return 2 * R * Math.asin(Math.sqrt(a));
+  }
+  // ---- live-feed helpers (pure; oracle: verify/live_vectors.json) ----
+  const LIVE = { FRESH_MAX_MIN: 45, STALE_MAX_MIN: 360 };
+  const ageMinutes = (fetchedISO, nowISO) => (Date.parse(nowISO) - Date.parse(fetchedISO)) / 60000;
+  function snapshotStatus(mins) {
+    if (typeof mins !== "number" || !isFinite(mins) || mins < 0) return "invalid";
+    if (mins <= LIVE.FRESH_MAX_MIN) return "fresh";
+    if (mins <= LIVE.STALE_MAX_MIN) return "stale";
+    return "expired";
+  }
+  // series: 15-minute interval totals, oldest→newest, entries {t, mm}.
+  // Returns the newest usable reading as an intensity, or null.
+  function i15FromSeries(series) {
+    if (!Array.isArray(series)) return null;
+    for (let i = series.length - 1; i >= 0; i--) {
+      const v = series[i];
+      if (v && typeof v.mm === "number" && isFinite(v.mm) && v.mm >= 0)
+        return { mmh: v.mm * 4, at: v.t };
+    }
+    return null;
+  }
+  return { B, CT, CF, CS, LN3, ADVISORY_FLOOR, WATCH_FRACTION, TIER_ORDER, LIVE,
+           logit, sigmoid, y2factor, kFromThreshold, pCurve, m1P, m1R,
+           accum15ToMmh, inchesToMm, thresholds, classify, haversineKm,
+           ageMinutes, snapshotStatus, i15FromSeries };
+})();
+/*ARROYO_ENGINE_END*/
+
+/*ARROYO_SHA256_START*/
+// Compact SHA-256 (FIPS 180-4), dependency-free so the QA gate works in any
+// context (including file:// and test DOMs). Verified in tests against
+// Python hashlib: sha256("abc") = ba7816bf…f20015ad.
+function sha256Hex(str) {
+  const K = [0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,
+    0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,
+    0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,
+    0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,
+    0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,
+    0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,
+    0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,
+    0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
+  let H = [0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19];
+  const rr = (x, n) => (x >>> n) | (x << (32 - n));
+  const enc = new TextEncoder().encode(str);
+  const L = enc.length, bitLen = L * 8;
+  const padded = new Uint8Array((((L + 8) >> 6) + 1) << 6);
+  padded.set(enc); padded[L] = 0x80;
+  const dv = new DataView(padded.buffer);
+  dv.setUint32(padded.length - 4, bitLen >>> 0);
+  dv.setUint32(padded.length - 8, Math.floor(bitLen / 0x100000000));
+  const w = new Int32Array(64);
+  for (let off = 0; off < padded.length; off += 64) {
+    for (let i = 0; i < 16; i++) w[i] = dv.getInt32(off + i * 4);
+    for (let i = 16; i < 64; i++) {
+      const s0 = rr(w[i-15],7) ^ rr(w[i-15],18) ^ (w[i-15] >>> 3);
+      const s1 = rr(w[i-2],17) ^ rr(w[i-2],19) ^ (w[i-2] >>> 10);
+      w[i] = (w[i-16] + s0 + w[i-7] + s1) | 0;
+    }
+    let [a,b,c,d,e,f,g,h] = H;
+    for (let i = 0; i < 64; i++) {
+      const S1 = rr(e,6) ^ rr(e,11) ^ rr(e,25);
+      const ch = (e & f) ^ (~e & g);
+      const t1 = (h + S1 + ch + K[i] + w[i]) | 0;
+      const S0 = rr(a,2) ^ rr(a,13) ^ rr(a,22);
+      const mj = (a & b) ^ (a & c) ^ (b & c);
+      const t2 = (S0 + mj) | 0;
+      h=g; g=f; f=e; e=(d+t1)|0; d=c; c=b; b=a; a=(t1+t2)|0;
+    }
+    H = H.map((v,i) => (v + [a,b,c,d,e,f,g,h][i]) | 0);
+  }
+  return H.map(v => (v >>> 0).toString(16).padStart(8, "0")).join("");
+}
+/*ARROYO_SHA256_END*/
+
+/*ARROYO_STRINGS_START*/
+const STRINGS = {
+en:{ skip:"Skip to content",
+ "rail.head":"Arroyo supplements official alerts — it never replaces them.", "rail.act":"Act on:",
+ tagline:"The mountain’s seasons, on your street.",
+ "a11y.lang":"Language", "ctl.large":"Large type", "ctl.calm":"Calm motion",
+ "train.tag":"TRAINING DATA", "train.body":"the basin numbers below are synthetic examples for learning the interface. They are not USGS values. A maintainer loads the official USGS Eaton assessment before public use.",
+ "cand.tag":"CANDIDATE DATASET (session preview)", "cand.body":"a maintainer is previewing an unloaded dataset. Refresh to return to the shipped data.",
+ "ring.year":"Post-fire year 2", "ring.season":"wet season ahead: Nov–Mar", "ring.cap":"The Eaton scar’s second wet season begins this November.",
+ "hero.eyebrow":"Eaton burn scar · San Gabriel foothills", "hero.h1":"Read the mountain.",
+ "hero.lede":"After a fire, burned slopes can turn heavy rain into debris flows. The USGS publishes the rainfall trigger for each canyon; the county and the National Weather Service issue the warnings. Arroyo teaches you to read all of it — what the trigger for your basin means, how close a storm is getting, and exactly which official alert to act on. In English, Spanish, and Chinese.",
+ "hero.steps":"Three steps: pick your canyon, set a rain rate, read the ladder.",
+ "reader.eyebrow":"The threshold reader", "reader.h2":"How close is the rain to your canyon’s trigger?",
+ "reader.note":"Arroyo’s tiers are reading aids for published thresholds. They are not official products, and no tier here ever tells you that you are safe.",
+ "reader.season":"Season", "reader.y1":"2025–26 (year 1 · P50 trigger)", "reader.y2":"2026–27 (year 2 · P75 trigger)",
+ "reader.y2note":"Year-2 trigger = published P50 × 1.3026 (shown in Field Notes). Published P75 values are used directly when the dataset provides them.",
+ "reader.rain":"Rain rate", "reader.i15":"15-minute intensity",
+ "reader.acc":"= {a} mm of rain in 15 minutes",
+ "quick.ffw":"Dec ’25 FFW rate",
+ "tier.all_clear":"All clear", "tier.advisory":"Advisory", "tier.watch":"Watch", "tier.warning":"Warning",
+ "tierd.all_clear":"Below the advisory floor.", "tierd.advisory":"Rain worth watching on the scar (≥ {t} mm/h).",
+ "tierd.watch":"At or above 60% of the trigger (≥ {t} mm/h).", "tierd.warning":"At or above the published trigger (≥ {t} mm/h).",
+ "readout":"Rain at {i} mm/h is {p}% of the {yr} trigger for {b} ({t} mm/h).",
+ "readout.yr1":"year-1 (P50)", "readout.yr2":"year-2 (P75)", "readout.pub50":"Trigger as published (P50).", "readout.pub75":"Trigger as published (P75).", "readout.derived":"Year-2 trigger derived: published P50 × 1.3026.",
+ "hw":"Session high-water: {tier}. The tier display only escalates within a session; refreshing resets it. It is never an all-clear.",
+ "curve.h":"The likelihood curve behind the trigger",
+ "curve.cap":"The USGS M1 model (Staley et al., 2017) links rain to debris-flow likelihood. Arroyo draws each basin’s curve from its published trigger — the dot at 50% (or 75% in year 2) is the number above.",
+ "sim.eyebrow":"Practice", "sim.h2":"Storm trainer",
+ "sim.lede":"Replay a storm shape against the selected basin, fifteen minutes at a time. Training runs are sandboxed: they never touch the live reading above.",
+ "sim.preset":"Storm preset", "sim.p1":"Steady soak (gentle, long)", "sim.p2":"Atmospheric river (long, strong)", "sim.p3":"Cloudburst on the scar (short, intense)",
+ "sim.start":"Start", "sim.step":"Advance 15 min", "sim.exit":"Exit training",
+ "sim.done":"Storm complete.", "sim.hw":"Training high-water this run: {tier}.",
+ "sim.cols":["Step","15-min accum (mm)","Intensity (mm/h)","% of trigger","Tier"],
+ "lit.eyebrow":"The literacy core", "lit.h2":"How to read a warning",
+ "lit.lede":"Three official products cover this hazard. Learn the names, who issues each, and what each asks of you. Arroyo issues none of them.",
+ "lit.nws":"Issued by the National Weather Service", "lit.county":"Issued by Los Angeles County",
+ "lit.w1":"Flash Flood Watch", "lit.w1d":"Conditions are favorable. Debris flows on burn scars are possible in the watch window.",
+ "lit.w1do":"Prepare: check your evacuation zone, fuel the car, review your plan.",
+ "lit.w2":"Flash Flood Warning", "lit.w2d":"Flooding or debris flow is happening or imminent. On a burn scar this is the most urgent NWS product.",
+ "lit.w2do":"Act now: move away from channels and canyon mouths; do not wait to see water.",
+ "lit.w3":"Evacuation Warning → Order", "lit.w3d":"A Warning means be ready to leave — people who need more time should go now. An Order means leave immediately.",
+ "lit.w3do":"Know your zone at Genasys Protect before the storm, and follow Alert LA County.",
+ "lit.link":"See the official source", "lit.link2":"Find your zone",
+ "fn.eyebrow":"Field notes", "fn.h2":"The science, in plain terms",
+ "fn.langnote":"These notes are in English for now — translations are under community review.",
+ "res.eyebrow":"Before the storm", "res.h2":"Resources that matter in this hazard",
+ "res.r1":"Know your evacuation zone", "res.r1d":"Look up your zone once, on a dry day, and write it down.",
+ "res.r2":"Sign up for county alerts", "res.r2d":"Alert LA County delivers evacuation warnings and orders to your phone.",
+ "res.r3":"The flood-insurance mudflow trap", "res.r3d":"Standard homeowners policies exclude flood and mudflow; NFIP flood policies cover “mudflow” and typically take 30 days to start. Ask before the rain.",
+ "res.r4":"Sandbags and help", "res.r4d":"LA County Public Works posts seasonal sandbag locations; 211 LA connects any other need, in your language.",
+ "st.eyebrow":"Provenance", "st.h2":"Status & methods", "st.data":"Dataset", "st.cite":"Methods & citations",
+ "st.mode":"Mode", "st.version":"Version", "st.source":"Source", "st.retrieved":"Retrieved", "st.units":"Units", "st.basins":"Basins", "st.build":"Build",
+ "st.selfcheck":"Engine self-check at load: {n}/{d} canary values match the verification oracle.",
+ "adm.eyebrow":"Maintainer", "adm.h2":"QA console",
+ "adm.about":"Quality-assurance tools for the site maintainer: an engine self-test against the independent verification oracle, a dataset inspector, and a session-only preview loader for candidate USGS datasets. This gate keeps casual visitors out of maintainer tools; it is not a security boundary — the site holds no secrets and no user data, and the real administrative control plane is the code repository.",
+ "adm.pass":"Maintainer passphrase", "adm.unlock":"Unlock", "adm.bad":"Not the passphrase.",
+ "adm.locked":"Too many attempts — try again in {s}s.",
+ "adm.selftest":"Run engine self-test", "adm.inspect":"Inspect dataset", "adm.export":"Export current dataset",
+ "adm.diag":"Diagnostics", "adm.lock":"Lock console",
+ "adm.loadlab":"Paste a candidate basins_eaton.json to validate and preview (this session only — nothing is saved):",
+ "adm.validate":"Validate & preview",
+ "live.eyebrow":"On the mountain right now", "live.h2":"Official alerts and observed rain",
+ "live.lede":"Two snapshots, refreshed by a background job and stamped with their age: what the National Weather Service currently has in effect, and what nearby gauges last measured. Numbers here are observations, never Arroyo tiers.",
+ "live.alerts":"Active NWS products — Los Angeles County",
+ "live.alertsNone":"No flash-flood or debris-flow products listed for Los Angeles County as of {t}. This list can lag — confirm at the official source.",
+ "live.alertsNote":"This list can lag the source. The moment it matters, read the office directly:",
+ "live.rain":"Observed rain near the scar",
+ "live.rainNone":"No usable current gauge data. That is not an all-clear — check the official sources above.",
+ "live.rainNote":"Shown as plain numbers on purpose — no colors, no tiers. Press a rate to read it against your basin's trigger in the reader above; nothing is ever applied automatically.",
+ "live.updated":"Updated {m} min ago.", "live.stale":"STALE — last update {m} min ago. Treat with caution and check official sources.",
+ "live.expired":"Snapshot expired ({m} min old) — values hidden.",
+ "live.feedoff":"Live feeds aren't configured on this copy. The panel fills in once the scheduled data job runs (see the launch guide).",
+ "live.basis.i15":"15-min rate", "live.basis.1h":"1-hour rate — smooths bursts; treat as a floor",
+ "live.use":"Read this rate", "live.until":"in effect until {t}", "live.obs":"observed {t}",
+ "foot.rails":"No push alerts. No “you are safe.” Instrument data drives tiers; reports and photos never do. Every tier links to the official sources above.",
+ "foot.ai":"This site’s interface and engine were generated with AI assistance (Claude, Anthropic) at the maintainer’s direction, August 2026, and are verified against an included independent oracle. It is a community education project, not an official product of any agency."
+},
+es:{ skip:"Saltar al contenido",
+ "rail.head":"Arroyo complementa las alertas oficiales — nunca las reemplaza.", "rail.act":"Actúa según:",
+ tagline:"Las estaciones de la montaña, en tu calle.",
+ "a11y.lang":"Idioma", "ctl.large":"Letra grande", "ctl.calm":"Menos movimiento",
+ "train.tag":"DATOS DE ENTRENAMIENTO", "train.body":"los números de las cuencas son ejemplos sintéticos para aprender a usar la página. No son valores del USGS. El mantenedor carga la evaluación oficial del USGS antes del uso público.",
+ "cand.tag":"CONJUNTO CANDIDATO (vista previa de sesión)", "cand.body":"el mantenedor está previsualizando un conjunto de datos sin publicar. Actualiza la página para volver a los datos originales.",
+ "ring.year":"Año 2 tras el incendio", "ring.season":"temporada de lluvias: nov–mar", "ring.cap":"La segunda temporada de lluvias de la cicatriz del Eaton comienza este noviembre.",
+ "hero.eyebrow":"Cicatriz del incendio Eaton · Sierra de San Gabriel", "hero.h1":"Lee la montaña.",
+ "hero.lede":"Después de un incendio, las laderas quemadas pueden convertir la lluvia intensa en flujos de escombros. El USGS publica el umbral de lluvia de cada cañón; el condado y el Servicio Meteorológico Nacional emiten las alertas. Arroyo te enseña a leerlo todo: qué significa el umbral de tu cuenca, qué tan cerca está la tormenta y exactamente qué alerta oficial seguir. En inglés, español y chino.",
+ "hero.steps":"Tres pasos: elige tu cañón, fija una intensidad de lluvia, lee la escalera.",
+ "reader.eyebrow":"El lector de umbrales", "reader.h2":"¿Qué tan cerca está la lluvia del umbral de tu cañón?",
+ "reader.note":"Los niveles de Arroyo son ayudas de lectura de umbrales publicados. No son productos oficiales, y ningún nivel aquí te dice que estás a salvo.",
+ "reader.season":"Temporada", "reader.y1":"2025–26 (año 1 · umbral P50)", "reader.y2":"2026–27 (año 2 · umbral P75)",
+ "reader.y2note":"Umbral del año 2 = P50 publicado × 1.3026 (ver Notas de campo). Si el conjunto de datos publica P75, se usa directamente.",
+ "reader.rain":"Intensidad de lluvia", "reader.i15":"Intensidad de 15 minutos",
+ "reader.acc":"= {a} mm de lluvia en 15 minutos",
+ "quick.ffw":"Tasa del aviso de dic. ’25",
+ "tier.all_clear":"Sin nivel", "tier.advisory":"Atención", "tier.watch":"Vigilancia", "tier.warning":"Umbral alcanzado",
+ "tierd.all_clear":"Por debajo del piso de atención.", "tierd.advisory":"Lluvia que merece atención en la cicatriz (≥ {t} mm/h).",
+ "tierd.watch":"Al menos 60% del umbral (≥ {t} mm/h).", "tierd.warning":"En o por encima del umbral publicado (≥ {t} mm/h).",
+ "readout":"Lluvia a {i} mm/h es el {p}% del umbral {yr} de {b} ({t} mm/h).",
+ "readout.yr1":"del año 1 (P50)", "readout.yr2":"del año 2 (P75)", "readout.pub50":"Umbral tal como se publicó (P50).", "readout.pub75":"Umbral tal como se publicó (P75).", "readout.derived":"Umbral del año 2 derivado: P50 publicado × 1.3026.",
+ "hw":"Máximo de la sesión: {tier}. El nivel mostrado solo sube durante una sesión; al recargar se reinicia. Nunca significa que todo está despejado.",
+ "curve.h":"La curva de probabilidad detrás del umbral",
+ "curve.cap":"El modelo M1 del USGS (Staley et al., 2017) relaciona la lluvia con la probabilidad de flujo de escombros. Arroyo dibuja la curva de cada cuenca a partir de su umbral publicado — el punto en 50% (o 75% en el año 2) es el número de arriba.",
+ "sim.eyebrow":"Práctica", "sim.h2":"Entrenador de tormentas",
+ "sim.lede":"Reproduce una tormenta contra la cuenca seleccionada, de quince en quince minutos. Las prácticas están aisladas: nunca afectan la lectura real de arriba.",
+ "sim.preset":"Tormenta de práctica", "sim.p1":"Lluvia constante (suave, larga)", "sim.p2":"Río atmosférico (largo, fuerte)", "sim.p3":"Aguacero sobre la cicatriz (corto, intenso)",
+ "sim.start":"Iniciar", "sim.step":"Avanzar 15 min", "sim.exit":"Salir de la práctica",
+ "sim.done":"Tormenta completa.", "sim.hw":"Máximo de esta práctica: {tier}.",
+ "sim.cols":["Paso","Acum. 15 min (mm)","Intensidad (mm/h)","% del umbral","Nivel"],
+ "lit.eyebrow":"Lo esencial", "lit.h2":"Cómo leer una alerta",
+ "lit.lede":"Tres productos oficiales cubren este peligro. Aprende sus nombres, quién emite cada uno y qué te pide cada uno. Arroyo no emite ninguno.",
+ "lit.nws":"Emitido por el Servicio Meteorológico Nacional", "lit.county":"Emitido por el Condado de Los Ángeles",
+ "lit.w1":"Vigilancia de inundaciones repentinas", "lit.w1d":"Las condiciones son favorables. Son posibles flujos de escombros en zonas quemadas durante la vigilancia.",
+ "lit.w1do":"Prepárate: verifica tu zona de evacuación, llena el tanque, repasa tu plan.",
+ "lit.w2":"Aviso de inundaciones repentinas", "lit.w2d":"La inundación o el flujo de escombros está ocurriendo o es inminente. En una zona quemada es el producto más urgente del NWS.",
+ "lit.w2do":"Actúa ya: aléjate de los cauces y las bocas de los cañones; no esperes a ver el agua.",
+ "lit.w3":"Advertencia de evacuación → Orden", "lit.w3d":"Una Advertencia significa prepárate para salir — quienes necesiten más tiempo deben salir ya. Una Orden significa salir de inmediato.",
+ "lit.w3do":"Conoce tu zona en Genasys Protect antes de la tormenta y sigue Alert LA County.",
+ "lit.link":"Ver la fuente oficial", "lit.link2":"Busca tu zona",
+ "fn.eyebrow":"Notas de campo", "fn.h2":"La ciencia, en palabras claras",
+ "fn.langnote":"Estas notas están en inglés por ahora — las traducciones están en revisión comunitaria.",
+ "res.eyebrow":"Antes de la tormenta", "res.h2":"Recursos que importan en este peligro",
+ "res.r1":"Conoce tu zona de evacuación", "res.r1d":"Busca tu zona una vez, en un día seco, y anótala.",
+ "res.r2":"Inscríbete en las alertas del condado", "res.r2d":"Alert LA County envía advertencias y órdenes de evacuación a tu teléfono.",
+ "res.r3":"La trampa del seguro contra inundaciones", "res.r3d":"Las pólizas estándar de vivienda excluyen inundación y flujo de lodo; las pólizas NFIP cubren el flujo de lodo y suelen tardar 30 días en empezar. Pregunta antes de la lluvia.",
+ "res.r4":"Sacos de arena y ayuda", "res.r4d":"Obras Públicas del Condado publica los puntos de sacos de arena; 211 LA conecta cualquier otra necesidad, en tu idioma.",
+ "st.eyebrow":"Procedencia", "st.h2":"Estado y métodos", "st.data":"Datos", "st.cite":"Métodos y citas",
+ "st.mode":"Modo", "st.version":"Versión", "st.source":"Fuente", "st.retrieved":"Obtenido", "st.units":"Unidades", "st.basins":"Cuencas", "st.build":"Compilación",
+ "st.selfcheck":"Autoverificación del motor al cargar: {n}/{d} valores coinciden con el oráculo de verificación.",
+ "adm.eyebrow":"Mantenimiento", "adm.h2":"Consola de control de calidad",
+ "adm.about":"Herramientas de control de calidad para el mantenedor: autoprueba del motor contra el oráculo independiente, inspector del conjunto de datos y un cargador de vista previa (solo por sesión) para conjuntos candidatos del USGS. Esta puerta mantiene las herramientas fuera del uso casual; no es una frontera de seguridad — el sitio no guarda secretos ni datos de usuarios, y el verdadero plano de administración es el repositorio de código.",
+ "adm.pass":"Frase de acceso", "adm.unlock":"Abrir", "adm.bad":"Frase incorrecta.",
+ "adm.locked":"Demasiados intentos — espera {s}s.",
+ "adm.selftest":"Autoprueba del motor", "adm.inspect":"Inspeccionar datos", "adm.export":"Exportar datos actuales",
+ "adm.diag":"Diagnóstico", "adm.lock":"Cerrar consola",
+ "adm.loadlab":"Pega un basins_eaton.json candidato para validar y previsualizar (solo esta sesión — no se guarda nada):",
+ "adm.validate":"Validar y previsualizar",
+ "live.eyebrow":"En la montaña ahora mismo", "live.h2":"Alertas oficiales y lluvia observada",
+ "live.lede":"Dos instantáneas, actualizadas por un proceso en segundo plano y selladas con su antigüedad: lo que el Servicio Meteorológico Nacional tiene en vigor y lo último que midieron los pluviómetros cercanos. Los números aquí son observaciones, nunca niveles de Arroyo.",
+ "live.alerts":"Productos activos del NWS — Condado de Los Ángeles",
+ "live.alertsNone":"Ninguna vigilancia ni aviso de inundaciones repentinas listado para el Condado de Los Ángeles a las {t}. Esta lista puede atrasarse — confirma en la fuente oficial.",
+ "live.alertsNote":"Esta lista puede atrasarse. Cuando importe, lee directamente la oficina:",
+ "live.rain":"Lluvia observada cerca de la cicatriz",
+ "live.rainNone":"Sin datos utilizables de los pluviómetros. Eso no significa que no haya peligro — consulta las fuentes oficiales de arriba.",
+ "live.rainNote":"Se muestran como números simples a propósito — sin colores ni niveles. Pulsa una tasa para leerla contra el umbral de tu cuenca arriba; nada se aplica automáticamente.",
+ "live.updated":"Actualizado hace {m} min.", "live.stale":"DESACTUALIZADO — última actualización hace {m} min. Tómalo con cautela y consulta las fuentes oficiales.",
+ "live.expired":"Instantánea vencida (hace {m} min) — valores ocultos.",
+ "live.feedoff":"Esta copia no tiene los datos en vivo configurados. El panel se llena cuando corre el proceso programado (ver la guía de lanzamiento).",
+ "live.basis.i15":"tasa de 15 min", "live.basis.1h":"tasa de 1 hora — suaviza las ráfagas; trátala como un mínimo",
+ "live.use":"Leer esta tasa", "live.until":"vigente hasta {t}", "live.obs":"observado {t}",
+ "foot.rails":"Sin notificaciones. Sin “estás a salvo”. Los niveles se calculan solo con datos de instrumentos; fotos y reportes nunca los mueven. Cada nivel enlaza a las fuentes oficiales de arriba.",
+ "foot.ai":"La interfaz y el motor de este sitio se generaron con asistencia de IA (Claude, Anthropic) bajo la dirección del mantenedor, agosto de 2026, y se verifican contra un oráculo independiente incluido. Es un proyecto educativo comunitario, no un producto oficial de ninguna agencia."
+},
+zh:{ skip:"跳到正文",
+ "rail.head":"Arroyo 仅为官方警报的补充——绝不替代官方警报。", "rail.act":"请以此为准：",
+ tagline:"山间的季节，就在你的街口。",
+ "a11y.lang":"语言", "ctl.large":"大字号", "ctl.calm":"减少动效",
+ "train.tag":"训练数据", "train.body":"下方各流域的数字是用于学习界面的合成示例，并非 USGS 官方数值。维护者会在公开使用前载入 USGS 官方 Eaton 评估数据。",
+ "cand.tag":"候选数据集（仅本次会话预览）", "cand.body":"维护者正在预览尚未发布的数据集。刷新页面即可恢复原始数据。",
+ "ring.year":"火后第 2 年", "ring.season":"雨季：11 月至 3 月", "ring.cap":"Eaton 火烧迹地的第二个雨季将于今年 11 月开始。",
+ "hero.eyebrow":"Eaton 火烧迹地 · 圣盖博山麓", "hero.h1":"读懂这座山。",
+ "hero.lede":"山火过后，烧毁的山坡可能把强降雨变成泥石流。USGS 公布每条峡谷的降雨触发阈值；县政府和国家气象局负责发布警报。Arroyo 教你读懂这一切：你所在流域的阈值是什么意思、暴雨离它有多近、该按哪一条官方警报行动。提供英文、西班牙文和中文。",
+ "hero.steps":"三步：选择峡谷，设定雨强，读阶梯。",
+ "reader.eyebrow":"阈值读取器", "reader.h2":"降雨离你所在峡谷的触发阈值还有多近？",
+ "reader.note":"Arroyo 的分级只是帮助阅读官方阈值的工具，不是官方产品；这里的任何分级都不代表“安全”。",
+ "reader.season":"季节", "reader.y1":"2025–26（第 1 年 · P50 阈值）", "reader.y2":"2026–27（第 2 年 · P75 阈值）",
+ "reader.y2note":"第 2 年阈值 = 公布的 P50 × 1.3026（见“野外笔记”）。若数据集直接公布 P75，则直接使用。",
+ "reader.rain":"雨强", "reader.i15":"15 分钟雨强",
+ "reader.acc":"= 15 分钟内 {a} 毫米降雨",
+ "quick.ffw":"2025 年 12 月警报雨强",
+ "tier.all_clear":"无分级", "tier.advisory":"留意", "tier.watch":"接近阈值", "tier.warning":"达到阈值",
+ "tierd.all_clear":"低于留意下限。", "tierd.advisory":"火烧迹地上值得留意的降雨（≥ {t} 毫米/小时）。",
+ "tierd.watch":"达到阈值的 60% 以上（≥ {t} 毫米/小时）。", "tierd.warning":"达到或超过公布阈值（≥ {t} 毫米/小时）。",
+ "readout":"雨强 {i} 毫米/小时，相当于 {b} {yr}阈值（{t} 毫米/小时）的 {p}%。",
+ "readout.yr1":"第 1 年（P50）", "readout.yr2":"第 2 年（P75）", "readout.pub50":"阈值为公布值（P50）。", "readout.pub75":"阈值为公布值（P75）。", "readout.derived":"第 2 年阈值为推算值：公布的 P50 × 1.3026。",
+ "hw":"本次会话最高分级：{tier}。显示的分级在一次会话内只升不降；刷新后重置。它永远不表示解除或安全。",
+ "curve.h":"阈值背后的概率曲线",
+ "curve.cap":"USGS 的 M1 模型（Staley 等，2017）把降雨与泥石流概率联系起来。Arroyo 依据公布的阈值绘制每个流域的曲线——50%（第 2 年为 75%）处的圆点就是上面的数字。",
+ "sim.eyebrow":"练习", "sim.h2":"暴雨练习器",
+ "sim.lede":"以 15 分钟为步长，把一场暴雨回放到所选流域上。练习完全隔离：绝不影响上方的真实读数。",
+ "sim.preset":"练习暴雨", "sim.p1":"连绵细雨（温和、持久）", "sim.p2":"大气河（持久、强烈）", "sim.p3":"迹地骤雨（短促、猛烈）",
+ "sim.start":"开始", "sim.step":"前进 15 分钟", "sim.exit":"退出练习",
+ "sim.done":"暴雨结束。", "sim.hw":"本次练习最高分级：{tier}。",
+ "sim.cols":["步","15 分钟雨量（毫米）","雨强（毫米/小时）","阈值百分比","分级"],
+ "lit.eyebrow":"核心知识", "lit.h2":"如何读懂一条警报",
+ "lit.lede":"这一灾害涉及三种官方产品。请记住它们的名称、由谁发布、各自要求你做什么。Arroyo 不发布其中任何一种。",
+ "lit.nws":"由国家气象局发布", "lit.county":"由洛杉矶县发布",
+ "lit.w1":"山洪监视（Flash Flood Watch）", "lit.w1d":"条件有利于山洪。监视时段内火烧迹地可能发生泥石流。",
+ "lit.w1do":"做好准备：查好疏散分区，给车加油，复习家庭计划。",
+ "lit.w2":"山洪警报（Flash Flood Warning）", "lit.w2d":"洪水或泥石流正在发生或即将发生。在火烧迹地，这是气象局最紧急的产品。",
+ "lit.w2do":"立即行动：远离沟道和峡谷口；不要等到看见水再走。",
+ "lit.w3":"疏散警告 → 疏散命令", "lit.w3d":"“警告”意味着做好离开的准备——需要更多时间的人应立即出发。“命令”意味着必须马上撤离。",
+ "lit.w3do":"暴雨来临前在 Genasys Protect 查好你的分区，并关注 Alert LA County。",
+ "lit.link":"查看官方来源", "lit.link2":"查找你的分区",
+ "fn.eyebrow":"野外笔记", "fn.h2":"用平实的语言讲科学",
+ "fn.langnote":"这些笔记目前只有英文——译文正在社区审校中。",
+ "res.eyebrow":"暴雨来临前", "res.h2":"与这一灾害相关的资源",
+ "res.r1":"查好你的疏散分区", "res.r1d":"趁晴天查一次你的分区，并记下来。",
+ "res.r2":"订阅县级警报", "res.r2d":"Alert LA County 会把疏散警告和命令发送到你的手机。",
+ "res.r3":"洪水保险的“泥流”盲区", "res.r3d":"普通房屋保险不保洪水和泥流；NFIP 洪水保险承保“泥流”（mudflow），通常 30 天后生效。请在下雨前咨询。",
+ "res.r4":"沙袋与求助", "res.r4d":"县公共工程局每季公布沙袋领取点；其他任何需要可拨打 211 LA，支持中文。",
+ "st.eyebrow":"数据来源", "st.h2":"状态与方法", "st.data":"数据集", "st.cite":"方法与引用",
+ "st.mode":"模式", "st.version":"版本", "st.source":"来源", "st.retrieved":"获取日期", "st.units":"单位", "st.basins":"流域数", "st.build":"构建",
+ "st.selfcheck":"加载时引擎自检：{n}/{d} 项数值与独立验证基准一致。",
+ "adm.eyebrow":"维护者", "adm.h2":"质检控制台",
+ "adm.about":"供站点维护者使用的质检工具：对照独立验证基准的引擎自检、数据集检查器，以及仅限本次会话的候选 USGS 数据集预览。此门槛只为把维护工具与普通访问分开，并非安全边界——本站不含任何机密，也不收集用户数据；真正的管理平面是代码仓库。",
+ "adm.pass":"维护口令", "adm.unlock":"解锁", "adm.bad":"口令不正确。",
+ "adm.locked":"尝试次数过多——请 {s} 秒后再试。",
+ "adm.selftest":"运行引擎自检", "adm.inspect":"检查数据集", "adm.export":"导出当前数据集",
+ "adm.diag":"诊断", "adm.lock":"锁定控制台",
+ "adm.loadlab":"粘贴候选 basins_eaton.json 进行校验和预览（仅本次会话——不会保存任何内容）：",
+ "adm.validate":"校验并预览",
+ "live.eyebrow":"此刻山上的情况", "live.h2":"官方警报与实测降雨",
+ "live.lede":"两份快照，由后台任务定时刷新并标注数据时效：国家气象局当前生效的产品，以及附近雨量计最近的测量值。这里的数字只是观测值，绝不是 Arroyo 的分级。",
+ "live.alerts":"NWS 现行产品 — 洛杉矶县",
+ "live.alertsNone":"截至 {t}，清单中没有洛杉矶县的山洪监视或警报。此清单可能滞后——请以官方来源确认。",
+ "live.alertsNote":"此清单可能滞后。关键时刻请直接查看气象局：",
+ "live.rain":"火烧迹地附近的实测降雨",
+ "live.rainNone":"暂无可用的雨量计数据。这不代表安全——请查看上方官方来源。",
+ "live.rainNote":"这里刻意只显示纯数字——没有颜色，没有分级。点按某个雨强，即可在上方阅读器中对照你所在流域的阈值；任何数据都不会自动应用。",
+ "live.updated":"{m} 分钟前更新。", "live.stale":"数据滞后——上次更新为 {m} 分钟前。请谨慎参考，并以官方来源为准。",
+ "live.expired":"快照已过期（{m} 分钟前）——数值已隐藏。",
+ "live.feedoff":"此副本尚未配置实时数据。定时任务运行后，此面板会自动填充（见启动指南）。",
+ "live.basis.i15":"15 分钟雨强", "live.basis.1h":"1 小时雨强——会抹平短时骤雨，只可视为下限",
+ "live.use":"读取此雨强", "live.until":"有效至 {t}", "live.obs":"观测于 {t}",
+ "foot.rails":"没有推送通知，没有“你是安全的”。分级只由仪器数据驱动；照片和传闻绝不参与。每个分级都链接到上方的官方来源。",
+ "foot.ai":"本站界面与计算引擎在维护者指导下由 AI（Anthropic 的 Claude）于 2026 年 8 月生成，并对照随附的独立验证基准进行核验。这是一个社区教育项目，不是任何机构的官方产品。"
+}};
+/*ARROYO_STRINGS_END*/
+
+/*ARROYO_TRAINING_DATA_START*/
+const TRAINING_DATA = {
+  provenance: {
+    mode: "training",
+    dataset_version: "TRAINING (synthetic)",
+    source_url: "embedded — structure per PWFDF spec 10.5066/P13KUWCO",
+    retrieved: "2026-08-15",
+    units: { i15: "mm/h" },
+    built_by: "embedded training set (AI-generated, synthetic values)"
+  },
+  basins: [
+    { id:"eaton_canyon", name:"Eaton Canyon", lat:34.191, lon:-118.103, i15_mmh:{p50:18.0}, likelihood:0.88, volume_class:4, communities:["Altadena","Pasadena"] },
+    { id:"rubio", name:"Rubio Canyon", lat:34.198, lon:-118.118, i15_mmh:{p50:16.0}, likelihood:0.92, volume_class:4, communities:["Altadena"] },
+    { id:"las_flores", name:"Las Flores Canyon", lat:34.201, lon:-118.128, i15_mmh:{p50:20.0}, likelihood:0.81, volume_class:3, communities:["Altadena"] },
+    { id:"pasadena_glen", name:"Pasadena Glen", lat:34.186, lon:-118.077, i15_mmh:{p50:22.0, p75:28.6}, likelihood:0.74, volume_class:3, communities:["Pasadena","Kinneloa Mesa"] },
+    { id:"kinneloa", name:"Kinneloa Canyon", lat:34.189, lon:-118.088, i15_mmh:{p50:24.0}, likelihood:0.68, volume_class:3, communities:["Kinneloa Mesa","Pasadena"] },
+    { id:"bailey", name:"Bailey Canyon", lat:34.175, lon:-118.062, i15_mmh:{p50:26.0}, likelihood:0.61, volume_class:2, communities:["Sierra Madre"] },
+    { id:"little_santa_anita", name:"Little Santa Anita Canyon", lat:34.179, lon:-118.049, i15_mmh:{p50:28.0}, likelihood:0.55, volume_class:2, communities:["Sierra Madre","Arcadia"] },
+    { id:"santa_anita", name:"Santa Anita Canyon", lat:34.170, lon:-118.030, i15_mmh:{p50:34.0}, likelihood:0.42, volume_class:2, communities:["Arcadia","Monrovia"] }
+  ]
+};
+/*ARROYO_TRAINING_DATA_END*/
+
+/*ARROYO_VALIDATE_START*/
+// Structural validator mirroring verify/basins_eaton.schema.json (core rules).
+// Full JSON-Schema validation runs in CI; this in-browser mirror is the QA
+// console's first line and the loader's gate.
+function validateDataset(d) {
+  const errs = [], warn = [];
+  const isNum = v => typeof v === "number" && isFinite(v);
+  if (!d || typeof d !== "object") return { ok:false, errs:["not an object"], warn };
+  const p = d.provenance;
+  if (!p || typeof p !== "object") errs.push("provenance: missing");
+  else {
+    const training = p.mode === "training";
+    for (const f of ["dataset_version","source_url","retrieved","units"])
+      if (!p[f]) errs.push("provenance." + f + ": missing");
+    if (!p.units || p.units.i15 !== "mm/h") errs.push("provenance.units.i15 must be \"mm/h\"");
+    if (!training) {
+      if (!/^10\.5066\//.test(p.dataset_doi || "")) errs.push("provenance.dataset_doi: must be a 10.5066/… DOI (live mode)");
+      if (p.spec_doi !== "10.5066/P13KUWCO") errs.push("provenance.spec_doi: must be 10.5066/P13KUWCO (live mode)");
+    }
+  }
+  if (!Array.isArray(d.basins) || d.basins.length === 0) { errs.push("basins: missing or empty"); return { ok:false, errs, warn }; }
+  const training = p && p.mode === "training";
+  if (!training && (d.basins.length < 8 || d.basins.length > 15))
+    warn.push("basins: live datasets should carry 8–15 basins (found " + d.basins.length + ")");
+  const seen = new Set();
+  d.basins.forEach((b, i) => {
+    const at = "basins[" + i + "] ";
+    if (!b.id || !/^[a-z0-9_\-]+$/.test(b.id)) errs.push(at + "id: missing or bad format");
+    else if (seen.has(b.id)) errs.push(at + "id: duplicate"); else seen.add(b.id);
+    if (!b.name) errs.push(at + "name: missing");
+    if (!isNum(b.lat) || b.lat < 34.0 || b.lat > 34.4) errs.push(at + "lat: out of Eaton range 34.0–34.4");
+    if (!isNum(b.lon) || b.lon < -118.3 || b.lon > -117.9) errs.push(at + "lon: out of Eaton range −118.3…−117.9");
+    const t = b.i15_mmh;
+    if (!t || !isNum(t.p50)) errs.push(at + "i15_mmh.p50: missing");
+    else {
+      if (t.p50 <= ARROYO.ADVISORY_FLOOR) errs.push(at + "i15_mmh.p50: must exceed the 2.0 mm/h advisory floor (got " + t.p50 + ")");
+      if (t.p50 > 80) errs.push(at + "i15_mmh.p50: implausibly high — re-check units before overriding");
+      if (t.p75 !== undefined) {
+        if (!isNum(t.p75) || t.p75 <= t.p50) errs.push(at + "i15_mmh.p75: must be a number greater than p50");
+        else {
+          const implied = t.p50 * ARROYO.y2factor();
+          if (Math.abs(t.p75 - implied) / implied > 0.25)
+            warn.push(at + "i15_mmh.p75 differs >25% from P50×1.3026 — fine if published, verify the field mapping");
+        }
+      }
+    }
+    if (!isNum(b.likelihood) || b.likelihood < 0 || b.likelihood > 1) errs.push(at + "likelihood: must be 0–1");
+    if (!Number.isInteger(b.volume_class) || b.volume_class < 1 || b.volume_class > 4) errs.push(at + "volume_class: integer 1–4");
+    if (!Array.isArray(b.communities) || b.communities.length === 0) errs.push(at + "communities: at least one");
+    if (!training && (!b.usgs_fields || !b.usgs_fields.segment_or_basin_id || !b.usgs_fields.threshold_field_name))
+      errs.push(at + "usgs_fields: traceability block required in live mode");
+  });
+  return { ok: errs.length === 0, errs, warn };
+}
+function validateRainSnapshot(s) {
+  const errs = [];
+  if (!s || typeof s !== "object") return { ok: false, errs: ["not an object"] };
+  const p = s.provenance || {};
+  if (!p.source) errs.push("provenance.source missing");
+  if (!p.fetched_at || !isFinite(Date.parse(p.fetched_at))) errs.push("provenance.fetched_at not ISO");
+  if (!p.units || p.units.rate !== "mm/h") errs.push('provenance.units.rate must be "mm/h"');
+  if (!Array.isArray(s.stations) || s.stations.length === 0) errs.push("stations missing/empty");
+  else s.stations.forEach((st, i) => {
+    const at = "stations[" + i + "] ";
+    if (!st.id || !st.name) errs.push(at + "id/name missing");
+    if (st.basis !== "i15" && st.basis !== "1h") errs.push(at + 'basis must be "i15" or "1h"');
+    if (typeof st.rate_mmh !== "number" || !isFinite(st.rate_mmh) || st.rate_mmh < 0 || st.rate_mmh > 200)
+      errs.push(at + "rate_mmh out of 0–200");
+    if (!st.obs_time || !isFinite(Date.parse(st.obs_time))) errs.push(at + "obs_time not ISO");
+  });
+  return { ok: errs.length === 0, errs };
+}
+function validateAlertsSnapshot(s) {
+  const errs = [];
+  if (!s || typeof s !== "object") return { ok: false, errs: ["not an object"] };
+  const p = s.provenance || {};
+  if (!p.source) errs.push("provenance.source missing");
+  if (!p.fetched_at || !isFinite(Date.parse(p.fetched_at))) errs.push("provenance.fetched_at not ISO");
+  if (!Array.isArray(s.alerts)) errs.push("alerts must be an array (may be empty)");
+  else s.alerts.forEach((a, i) => {
+    const at = "alerts[" + i + "] ";
+    if (!a.id || !a.event || !a.headline) errs.push(at + "id/event/headline missing");
+    if (!a.link || !/^https:\/\//.test(a.link)) errs.push(at + "link must be https");
+  });
+  return { ok: errs.length === 0, errs };
+}
+/*ARROYO_VALIDATE_END*/
+
+/* ================= application ================= */
+const BUILD = "arroyo v2.0-community · 2026-08-15";
+const ADMIN_PASS_HASH = "595348e857a691a5bc9140c08fb29627c1a8b200636a9d98d79a1de9781b48a0";
+
+// Canary self-check: a small embedded slice of verify/golden_vectors.json.
+// The full 300+-check suite runs in /tests against this same engine block.
+const CANARY = [
+  ["y2", () => ARROYO.y2factor(), 1.302648013407],
+  ["k(20)", () => ARROYO.kFromThreshold(20), 0.1815],
+  ["P(24|k20)", () => ARROYO.pCurve(24, ARROYO.kFromThreshold(20)), 0.673926887101],
+  ["P@y2trig=0.75", () => ARROYO.pCurve(20 * ARROYO.y2factor(), ARROYO.kFromThreshold(20)), 0.75],
+  ["m1 severe R50", () => ARROYO.m1R(0.65, 0.55, 0.28, 0.5), 4.368231046931],
+  ["unit invariance", () => ARROYO.pCurve(6, 4 * ARROYO.kFromThreshold(20)), 0.673926887101],
+  ["in→mm", () => ARROYO.inchesToMm(1.25), 31.75],
+  ["tier watch@60%", () => ARROYO.classify(20, 1, 12).tier, "watch"],
+  ["tier warn@trigger", () => ARROYO.classify(20, 1, 20).tier, "warning"],
+  ["tier y2 lower frac", () => ARROYO.classify(20, 2, 16).fraction < ARROYO.classify(20, 1, 16).fraction, true],
+  ["guard: no inversion", () => ARROYO.classify(3, 1, 1.9).tier, "all_clear"],
+  ["guard: floor holds", () => ARROYO.classify(3, 1, 2.0).tier, "watch"],
+  ["live: 120min→stale", () => ARROYO.snapshotStatus(120), "stale"],
+  ["live: series 2.5mm→10mm/h", () => { const r = ARROYO.i15FromSeries([{ t: "a", mm: 2.5 }]); return r && r.mmh; }, 10]
+];
+function runCanary() {
+  let pass = 0;
+  for (const [, fn, want] of CANARY) {
+    const got = fn();
+    if (typeof want === "number" ? Math.abs(got - want) <= 1e-9 : got === want) pass++;
+  }
+  return { pass, total: CANARY.length };
+}
+
+// Storage: memory-first, guarded localStorage (audit F7). Preferences only.
+const store = (() => {
+  const mem = new Map();
+  let ls = null;
+  try { const t = "__arroyo_t"; window.localStorage.setItem(t, "1"); window.localStorage.removeItem(t); ls = window.localStorage; } catch (e) { ls = null; }
+  return {
+    mode: ls ? "localStorage" : "memory",
+    get: k => { try { return ls ? ls.getItem(k) : (mem.has(k) ? mem.get(k) : null); } catch (e) { return mem.get(k) ?? null; } },
+    set: (k, v) => { mem.set(k, v); try { if (ls) ls.setItem(k, v); } catch (e) {} }
+  };
+})();
+
+const state = {
+  lang: (store.get("arroyo.lang") || (navigator.language || "en").slice(0, 2)),
+  data: TRAINING_DATA,
+  candidate: false,
+  basinIdx: 0,
+  year: 2,
+  intensity: 12,
+  live: { hw: 0 },                 // live-session escalation high-water (index into TIER_ORDER)
+  sim: null,                        // sandboxed; created on Start, destroyed on Exit (audit F4)
+  admin: { unlocked: false, tries: 0, lockedUntil: 0 }
+};
+if (!STRINGS[state.lang]) state.lang = "en";
+
+const $ = id => document.getElementById(id);
+const T = (key, vars) => {
+  let s = (STRINGS[state.lang] && STRINGS[state.lang][key]) ?? STRINGS.en[key] ?? key;
+  if (vars) for (const [k, v] of Object.entries(vars)) s = s.split("{" + k + "}").join(v);
+  return s;
+};
+const fmt = (x, d = 1) => Number(x).toLocaleString(state.lang === "zh" ? "zh-CN" : state.lang, { minimumFractionDigits: d, maximumFractionDigits: d });
+
+function currentTrigger(b, year) {
+  if (year === 2 && b.i15_mmh.p75 !== undefined)
+    return { trig: b.i15_mmh.p75, published: true };
+  const t = ARROYO.thresholds(b.i15_mmh.p50, year);
+  return { trig: t.trigger, published: year === 1 };
+}
+function classifyBasin(b, year, I) {
+  const { trig } = currentTrigger(b, year);
+  // Reuse guarded ladder against the effective trigger (year already applied).
+  return ARROYO.classify(trig, 1, I);
+}
+
+/* ---------- render: i18n ---------- */
+function applyLang() {
+  document.documentElement.lang = state.lang === "zh" ? "zh-Hans" : state.lang;
+  document.querySelectorAll("[data-i18n]").forEach(el => { el.textContent = T(el.getAttribute("data-i18n")); });
+  $("lang").value = state.lang;
+  $("fnLangNote").hidden = state.lang === "en";
+  $("y2note").textContent = T("reader.y2note");
+  buildQuick();
+  renderAll();
+}
+function buildQuick() {
+  const quick = $("quick"); quick.textContent = "";
+  [["6", 6], ["12", 12], ["24", 24], [null, 31.75]].forEach(([label, v]) => {
+    const b = document.createElement("button"); b.type = "button";
+    b.textContent = (label || fmt(v, 2)) + " mm/h" + (label ? "" : " — " + T("quick.ffw"));
+    b.addEventListener("click", () => { state.intensity = v; $("intensity").value = v; renderReader(); });
+    quick.appendChild(b);
+  });
+}
+
+/* ---------- render: reader ---------- */
+function renderChips() {
+  const wrap = $("basinChips"); wrap.textContent = "";
+  state.data.basins.forEach((b, i) => {
+    const btn = document.createElement("button");
+    btn.className = "chip"; btn.type = "button";
+    btn.textContent = b.name;
+    btn.setAttribute("aria-pressed", String(i === state.basinIdx));
+    btn.addEventListener("click", () => { state.basinIdx = i; renderAll(); });
+    wrap.appendChild(btn);
+  });
+}
+function renderProv() {
+  const row = $("provRow"); row.textContent = "";
+  const p = state.data.provenance;
+  const mk = (txt, cls) => { const s = document.createElement("span"); s.className = "badge" + (cls ? " " + cls : ""); s.textContent = txt; row.appendChild(s); };
+  if (state.candidate) mk(T("cand.tag"), "train");
+  else if (p.mode === "training") mk(T("train.tag"), "train");
+  else {
+    mk("USGS · " + (p.dataset_version || ""), "live");
+    if (p.dataset_doi) mk("DOI " + p.dataset_doi, "live");
+  }
+  mk((state.lang === "en" ? "source: " : "") + p.source_url);
+  mk(T("st.retrieved") + " " + p.retrieved);
+  mk("i15: mm/h");
+}
+function renderReader() {
+  const b = state.data.basins[state.basinIdx];
+  $("bName").textContent = b.name;
+  $("bComm").textContent = b.communities.join(" · ") + "  ·  " + (state.lang === "zh" ? "泥石流可能性" : state.lang === "es" ? "probabilidad modelada" : "modeled likelihood") + " " + Math.round(b.likelihood * 100) + "%";
+  renderProv();
+  document.querySelectorAll('input[name="year"]').forEach(r => { r.checked = Number(r.value) === state.year; });
+  const I = state.intensity;
+  $("accEq").textContent = T("reader.acc", { a: fmt(I / 4, 2) });
+  const { trig, published } = currentTrigger(b, state.year);
+  const res = classifyBasin(b, state.year, I);
+  // ladder
+  const lad = $("ladder"); lad.textContent = "";
+  const thrFor = { all_clear: null, advisory: res.adv, watch: res.watch, warning: res.warn };
+  ARROYO.TIER_ORDER.forEach(tier => {
+    const li = document.createElement("li");
+    li.className = "rung" + (tier === res.tier ? " active" : "");
+    li.dataset.tier = tier;
+    const dot = document.createElement("span"); dot.className = "dot"; dot.setAttribute("aria-hidden", "true");
+    const mid = document.createElement("div");
+    const nm = document.createElement("b"); nm.textContent = T("tier." + tier);
+    const d = document.createElement("small");
+    d.textContent = thrFor[tier] === null ? T("tierd.all_clear") : T("tierd." + tier, { t: fmt(thrFor[tier]) });
+    mid.append(nm, d);
+    const thr = document.createElement("span"); thr.className = "thr num";
+    thr.textContent = thrFor[tier] === null ? "" : "≥ " + fmt(thrFor[tier]);
+    li.append(dot, mid, thr);
+    lad.appendChild(li);
+  });
+  // readout
+  const pct = Math.round(res.fraction * 100);
+  const ro = $("readout"); ro.textContent = "";
+  const big = document.createElement("span"); big.className = "pct num"; big.textContent = pct + "% ";
+  ro.appendChild(big);
+  ro.appendChild(document.createTextNode(T("readout", {
+    i: fmt(I), p: pct, b: b.name, t: fmt(trig),
+    yr: T(state.year === 2 ? "readout.yr2" : "readout.yr1")
+  })));
+  const src = document.createElement("small");
+  src.className = "hint"; src.style.display = "block";
+  src.textContent = state.year === 2 ? (published ? T("readout.pub75") : T("readout.derived")) : T("readout.pub50");
+  ro.appendChild(src);
+  // live escalation-only high-water
+  const idx = ARROYO.TIER_ORDER.indexOf(res.tier);
+  if (idx > state.live.hw) state.live.hw = idx;
+  $("hwLine").textContent = T("hw", { tier: T("tier." + ARROYO.TIER_ORDER[state.live.hw]) });
+  renderCurve(b, trig);
+}
+function renderCurve(b, trig) {
+  const svg = $("curve"); svg.textContent = "";
+  const pStar = state.year === 2 ? 0.75 : 0.5;
+  const k = ARROYO.kFromThreshold(trig, pStar);
+  const W = 560, H = 240, L = 46, R = 12, Tt = 12, Bm = 34;
+  const xmax = Math.max(trig * 1.6, state.intensity * 1.15, 10);
+  const X = v => L + (v / xmax) * (W - L - R);
+  const Y = p => Tt + (1 - p) * (H - Tt - Bm);
+  const NS = "http://www.w3.org/2000/svg";
+  const el = (n, at) => { const e = document.createElementNS(NS, n); for (const [a, v] of Object.entries(at)) e.setAttribute(a, v); svg.appendChild(e); return e; };
+  // axes + gridlines at 25/50/75
+  [0.25, 0.5, 0.75].forEach(p => {
+    el("line", { x1: L, x2: W - R, y1: Y(p), y2: Y(p), stroke: "#243247", "stroke-width": 1 });
+    el("text", { x: L - 8, y: Y(p) + 3, fill: "#9BA0A8", "font-size": 10, "text-anchor": "end" }).textContent = Math.round(p * 100) + "%";
+  });
+  el("line", { x1: L, x2: W - R, y1: Y(0), y2: Y(0), stroke: "#3A4A63", "stroke-width": 1.5 });
+  el("line", { x1: L, x2: L, y1: Y(0), y2: Y(1), stroke: "#3A4A63", "stroke-width": 1.5 });
+  // curve
+  let dPath = "";
+  for (let i = 0; i <= 120; i++) {
+    const R_ = (xmax * i) / 120, p = ARROYO.pCurve(R_, k);
+    dPath += (i ? "L" : "M") + X(R_).toFixed(1) + " " + Y(p).toFixed(1);
+  }
+  el("path", { d: dPath, fill: "none", stroke: "#E8A33B", "stroke-width": 2.5 });
+  // anchor at (trig, pStar)
+  el("circle", { cx: X(trig), cy: Y(pStar), r: 5.5, fill: "#F2EDE2" });
+  el("line", { x1: X(trig), x2: X(trig), y1: Y(0), y2: Y(pStar), stroke: "#F2EDE2", "stroke-dasharray": "3 4", "stroke-width": 1 });
+  el("text", { x: X(trig), y: Y(0) + 14, fill: "#C9C3B2", "font-size": 10, "text-anchor": "middle" }).textContent = fmt(trig) + " mm/h";
+  // current intensity marker
+  const I = state.intensity, pI = ARROYO.pCurve(I, k);
+  el("circle", { cx: X(I), cy: Y(pI), r: 5.5, fill: "#131C2B", stroke: "#E8A33B", "stroke-width": 2.5 });
+  el("text", { x: W - R, y: Y(0) + 26, fill: "#9BA0A8", "font-size": 10, "text-anchor": "end" }).textContent = "mm/h →";
+}
+
+/* ---------- simulator (sandboxed — audit F4) ---------- */
+const PRESETS = {
+  soak: [0.5, 1.0, 1.0, 1.5, 2.0, 2.0, 1.5, 1.0],
+  ar: [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 6.5, 5.0, 3.0, 1.5],
+  burst: [0.5, 1.5, 3.0, 8.5, 9.5, 4.0, 1.0]
+};
+function simRender() {
+  const out = $("simOut"); out.textContent = "";
+  if (!state.sim) return;
+  const s = state.sim, b = state.data.basins[state.basinIdx];
+  const tbl = document.createElement("table");
+  const trh = document.createElement("tr");
+  T("sim.cols").forEach(c => { const th = document.createElement("th"); th.textContent = c; trh.appendChild(th); });
+  tbl.appendChild(trh);
+  for (let i = 0; i < s.idx; i++) {
+    const acc = PRESETS[s.preset][i], I = ARROYO.accum15ToMmh(acc);
+    const r = classifyBasin(b, state.year, I);
+    const tr = document.createElement("tr");
+    [String(i + 1), fmt(acc, 1), fmt(I, 1), Math.round(r.fraction * 100) + "%", T("tier." + r.tier)]
+      .forEach(v => { const td = document.createElement("td"); td.className = "num"; td.textContent = v; tr.appendChild(td); });
+    tbl.appendChild(tr);
+  }
+  out.appendChild(tbl);
+  const line = document.createElement("p"); line.className = "hint";
+  line.textContent = (s.idx >= PRESETS[s.preset].length ? T("sim.done") + " " : "") +
+    T("sim.hw", { tier: T("tier." + ARROYO.TIER_ORDER[s.hw]) });
+  out.appendChild(line);
+}
+function simStart() {
+  state.sim = { preset: $("preset").value, idx: 0, hw: 0 };   // isolated object; never touches state.live
+  $("simStep").disabled = false; $("simExit").disabled = false; $("simStart").disabled = true;
+  simStep();
+}
+function simStep() {
+  const s = state.sim; if (!s) return;
+  if (s.idx < PRESETS[s.preset].length) {
+    s.idx++;
+    const b = state.data.basins[state.basinIdx];
+    const I = ARROYO.accum15ToMmh(PRESETS[s.preset][s.idx - 1]);
+    const tier = classifyBasin(b, state.year, I).tier;
+    const ti = ARROYO.TIER_ORDER.indexOf(tier);
+    if (ti > s.hw) s.hw = ti;                                  // sim high-water, sandboxed
+  }
+  if (s.idx >= PRESETS[s.preset].length) $("simStep").disabled = true;
+  simRender();
+}
+function simExit() {
+  state.sim = null;                                            // destroy sandbox; live.hw untouched
+  $("simStep").disabled = true; $("simExit").disabled = true; $("simStart").disabled = false;
+  $("simOut").textContent = "";
+}
+
+/* ---------- live snapshots (CI-written, same-origin; audit F6) ---------- */
+const liveFeeds = { rain: null, alerts: null };   // each: {snap, now} — now frozen at apply time for honest ages
+function fmtClock(iso) {
+  const d = new Date(iso);
+  return isFinite(d) ? d.toLocaleTimeString(state.lang === "zh" ? "zh-CN" : state.lang, { hour: "2-digit", minute: "2-digit" }) : "—";
+}
+function feedStatus(entry) {
+  if (!entry) return { s: "off" };
+  const m = ARROYO.ageMinutes(entry.snap.provenance.fetched_at, entry.now);
+  return { s: ARROYO.snapshotStatus(m), m: Math.round(m) };
+}
+function applyRain(snap, nowISO) {
+  const v = validateRainSnapshot(snap);
+  if (!v.ok) return v;
+  liveFeeds.rain = { snap, now: nowISO };
+  renderLive();
+  return v;
+}
+function applyAlerts(snap, nowISO) {
+  const v = validateAlertsSnapshot(snap);
+  if (!v.ok) return v;
+  liveFeeds.alerts = { snap, now: nowISO };
+  renderLive();
+  return v;
+}
+function stampLine(box, st, cls) {
+  const p = document.createElement("p"); p.className = "hint " + (cls || "");
+  p.textContent = st.s === "fresh" ? T("live.updated", { m: st.m })
+    : st.s === "stale" ? T("live.stale", { m: st.m })
+    : T("live.expired", { m: st.m });
+  box.appendChild(p);
+}
+function renderAlertsCard() {
+  const box = $("alertsBody"); box.textContent = "";
+  const st = feedStatus(liveFeeds.alerts);
+  if (st.s === "off") { const p = document.createElement("p"); p.className = "hint"; p.textContent = T("live.feedoff"); box.appendChild(p); return; }
+  if (st.s === "invalid" || st.s === "expired") { stampLine(box, { s: "expired", m: st.m }, "warn"); return; }
+  const { snap } = liveFeeds.alerts;
+  if (snap.alerts.length === 0) {
+    const p = document.createElement("p");
+    p.textContent = T("live.alertsNone", { t: fmtClock(snap.provenance.fetched_at) });
+    box.appendChild(p);
+  } else {
+    snap.alerts.forEach(a => {
+      const d = document.createElement("div"); d.style.margin = "0 0 .8rem";
+      const b = document.createElement("b"); b.textContent = a.event;
+      const h = document.createElement("small"); h.style.display = "block"; h.className = "hint"; h.textContent = a.headline;
+      d.append(b, h);
+      if (a.ends) { const e = document.createElement("small"); e.style.display = "block"; e.className = "hint num"; e.textContent = T("live.until", { t: fmtClock(a.ends) }); d.appendChild(e); }
+      const l = document.createElement("a"); l.href = a.link; l.target="_blank"; l.rel="noopener noreferrer"; l.textContent = T("lit.link");
+      d.appendChild(l); box.appendChild(d);
+    });
+  }
+  stampLine(box, st, st.s === "stale" ? "warn" : "");
+}
+function renderRainCard() {
+  const box = $("rainBody"); box.textContent = "";
+  const st = feedStatus(liveFeeds.rain);
+  if (st.s === "off") { const p = document.createElement("p"); p.className = "hint"; p.textContent = T("live.feedoff"); box.appendChild(p); return; }
+  if (st.s === "invalid" || st.s === "expired") {
+    stampLine(box, { s: "expired", m: st.m }, "warn");
+    const p = document.createElement("p"); p.textContent = T("live.rainNone"); box.appendChild(p); return;
+  }
+  const { snap } = liveFeeds.rain;
+  const tbl = document.createElement("table");
+  snap.stations.forEach(g => {
+    const tr = document.createElement("tr");
+    const n = document.createElement("td"); n.textContent = g.name;
+    const r = document.createElement("td"); r.className = "num";
+    r.textContent = fmt(g.rate_mmh) + " mm/h";
+    const bs = document.createElement("td");
+    const badge = document.createElement("span"); badge.className = "badge" + (g.basis === "1h" ? " train" : "");
+    badge.textContent = T("live.basis." + g.basis); bs.appendChild(badge);
+    const act = document.createElement("td");
+    const btn = document.createElement("button"); btn.className = "chip"; btn.type = "button";
+    btn.textContent = T("live.use");
+    btn.disabled = st.s !== "fresh";
+    btn.addEventListener("click", () => {
+      state.intensity = Math.min(g.rate_mmh, 120);
+      $("intensity").value = state.intensity;
+      renderReader();
+    });
+    act.appendChild(btn);
+    tr.append(n, r, bs, act); tbl.appendChild(tr);
+  });
+  box.appendChild(tbl);
+  stampLine(box, st, st.s === "stale" ? "warn" : "");
+}
+function renderLive() { renderAlertsCard(); renderRainCard(); }
+
+/* ---------- status ---------- */
+function renderStatus() {
+  const kv = $("statusKV"); kv.textContent = "";
+  const p = state.data.provenance;
+  const rows = [
+    [T("st.mode"), state.candidate ? T("cand.tag") : (p.mode === "training" ? T("train.tag") : "LIVE")],
+    [T("st.version"), p.dataset_version + (p.dataset_doi ? " · DOI " + p.dataset_doi : "")],
+    [T("st.source"), p.source_url],
+    [T("st.retrieved"), p.retrieved],
+    [T("st.units"), "i15 = mm/h · " + (state.lang === "zh" ? "雨量以 15 分钟累计换算（×4）" : state.lang === "es" ? "acumulación de 15 min ×4" : "15-min accumulation ×4")],
+    [T("st.basins"), String(state.data.basins.length)],
+    [T("st.build"), BUILD]
+  ];
+  for (const [k, v] of rows) {
+    const dt = document.createElement("dt"); dt.textContent = k;
+    const dd = document.createElement("dd"); dd.textContent = v;
+    kv.append(dt, dd);
+  }
+  const c = runCanary();
+  $("selfCheckLine").textContent = T("st.selfcheck", { n: c.pass, d: c.total });
+  $("selfCheckLine").className = "hint " + (c.pass === c.total ? "ok" : "bad");
+}
+
+/* ---------- mode banner ---------- */
+function renderBanner() {
+  const el = $("modeBanner");
+  const p = state.data.provenance;
+  if (state.candidate) {
+    el.hidden = false; el.innerHTML = "";
+    const b = document.createElement("b"); b.textContent = T("cand.tag");
+    el.append(b, document.createTextNode(" — " + T("cand.body")));
+  } else if (p.mode === "training") {
+    el.hidden = false; el.innerHTML = "";
+    const b = document.createElement("b"); b.textContent = T("train.tag");
+    el.append(b, document.createTextNode(" — " + T("train.body")));
+  } else el.hidden = true;
+}
+
+/* ---------- admin QA console ---------- */
+function admMsg(txt, cls) { const m = $("admMsg"); m.textContent = txt; m.className = "hint " + (cls || ""); }
+function admTryPass(pass) {
+  const now = Date.now();
+  if (now < state.admin.lockedUntil) { admMsg(T("adm.locked", { s: Math.ceil((state.admin.lockedUntil - now) / 1000) }), "bad"); return false; }
+  if (sha256Hex(pass) === ADMIN_PASS_HASH) {
+    state.admin.unlocked = true; state.admin.tries = 0;
+    $("admLocked").hidden = true; $("admPanel").hidden = false; admMsg("", "");
+    return true;
+  }
+  state.admin.tries++;
+  if (state.admin.tries >= 5) { state.admin.lockedUntil = now + 30000; state.admin.tries = 0; admMsg(T("adm.locked", { s: 30 }), "bad"); }
+  else admMsg(T("adm.bad"), "bad");
+  return false;
+}
+function admLock() { state.admin.unlocked = false; $("admPanel").hidden = true; $("admLocked").hidden = false; $("admPass").value = ""; }
+function admOut(lines) { $("admOut").textContent = Array.isArray(lines) ? lines.join("\n") : String(lines); }
+function admSelftest() {
+  const c = runCanary();
+  const lines = ["ENGINE SELF-TEST — canary slice of verify/golden_vectors.json", ""];
+  CANARY.forEach(([name, fn, want]) => {
+    const got = fn();
+    const ok = typeof want === "number" ? Math.abs(got - want) <= 1e-9 : got === want;
+    lines.push((ok ? "PASS  " : "FAIL  ") + name + "  →  " + got);
+  });
+  lines.push("", c.pass + "/" + c.total + (c.pass === c.total ? "  — engine matches the oracle." : "  — MISMATCH: do not deploy."));
+  lines.push("Full 300+-check suite: node --test tests/ (see LAUNCH_README).");
+  admOut(lines);
+}
+function admInspect() {
+  const v = validateDataset(state.data);
+  const p = state.data.provenance;
+  const lines = ["DATASET INSPECTION", "mode: " + (p.mode || "live") + (state.candidate ? " (candidate, session preview)" : ""),
+    "version: " + p.dataset_version, "basins: " + state.data.basins.length, ""];
+  state.data.basins.forEach(b => {
+    const y2 = b.i15_mmh.p75 !== undefined ? b.i15_mmh.p75 : b.i15_mmh.p50 * ARROYO.y2factor();
+    lines.push(b.id.padEnd(20) + " p50 " + b.i15_mmh.p50.toFixed(1).padStart(5) + "  y2 " + y2.toFixed(1).padStart(5) +
+      (b.i15_mmh.p75 !== undefined ? " (published p75)" : " (×1.3026)"));
+  });
+  lines.push("", v.ok ? "VALID — structural checks pass." : "INVALID:");
+  v.errs.forEach(e => lines.push("  ✗ " + e));
+  v.warn.forEach(w => lines.push("  ⚠ " + w));
+  admOut(lines);
+}
+function admValidateCandidate() {
+  let parsed;
+  try { parsed = JSON.parse($("admJson").value); }
+  catch (e) { admOut(["PARSE ERROR: " + e.message]); return; }
+  const v = validateDataset(parsed);
+  if (!v.ok) { admOut(["CANDIDATE REJECTED:"].concat(v.errs.map(e => "  ✗ " + e), v.warn.map(w => "  ⚠ " + w))); return; }
+  state.data = parsed; state.candidate = true; state.basinIdx = 0; state.live.hw = 0;
+  renderAll();
+  admOut(["CANDIDATE ACCEPTED — previewing this session only.", "Nothing was saved. Refresh to restore shipped data."]
+    .concat(v.warn.map(w => "  ⚠ " + w)));
+}
+function admExport() {
+  const blob = new Blob([JSON.stringify(state.data, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = "basins_eaton.json";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+function admDiag() {
+  admOut(["DIAGNOSTICS",
+    "build: " + BUILD,
+    "storage: " + store.mode + " (preferences only)",
+    "secureContext: " + String(typeof window.isSecureContext === "boolean" ? window.isSecureContext : "n/a"),
+    "reduced motion: " + (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches),
+    "lang: " + state.lang + " · html[lang]=" + document.documentElement.lang,
+    "dataset mode: " + (state.candidate ? "candidate" : state.data.provenance.mode || "live"),
+    "live session high-water: " + ARROYO.TIER_ORDER[state.live.hw],
+    "sha256 self-check: " + (sha256Hex("abc") === "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad" ? "PASS" : "FAIL")]);
+}
+
+/* ---------- wiring ---------- */
+function renderAll() { renderBanner(); renderChips(); renderReader(); renderStatus(); simRender(); renderLive(); }
+function init() {
+  // language
+  $("lang").addEventListener("change", e => { state.lang = e.target.value; store.set("arroyo.lang", state.lang); applyLang(); });
+  // toggles
+  const large = store.get("arroyo.large") === "1";
+  document.body.classList.toggle("large", large);
+  $("largeType").setAttribute("aria-pressed", String(large));
+  $("largeType").addEventListener("click", () => {
+    const on = document.body.classList.toggle("large");
+    $("largeType").setAttribute("aria-pressed", String(on)); store.set("arroyo.large", on ? "1" : "0");
+  });
+  const calm = store.get("arroyo.calm") === "1";
+  document.body.classList.toggle("calm", calm);
+  $("calm").setAttribute("aria-pressed", String(calm));
+  $("calm").addEventListener("click", () => {
+    const on = document.body.classList.toggle("calm");
+    $("calm").setAttribute("aria-pressed", String(on)); store.set("arroyo.calm", on ? "1" : "0");
+  });
+  // reader controls
+  document.querySelectorAll('input[name="year"]').forEach(r =>
+    r.addEventListener("change", e => { state.year = Number(e.target.value); renderAll(); }));
+  $("intensity").addEventListener("input", e => {
+    const v = parseFloat(e.target.value);
+    state.intensity = isFinite(v) && v >= 0 ? Math.min(v, 120) : 0;
+    renderReader();
+  });
+  // sim
+  $("simStart").addEventListener("click", simStart);
+  $("simStep").addEventListener("click", simStep);
+  $("simExit").addEventListener("click", simExit);
+  // admin
+  $("admGo").addEventListener("click", () => admTryPass($("admPass").value));
+  $("admPass").addEventListener("keydown", e => { if (e.key === "Enter") admTryPass($("admPass").value); });
+  $("admLock").addEventListener("click", admLock);
+  $("admSelftest").addEventListener("click", admSelftest);
+  $("admInspect").addEventListener("click", admInspect);
+  $("admExport").addEventListener("click", admExport);
+  $("admDiag").addEventListener("click", admDiag);
+  $("admValidate").addEventListener("click", admValidateCandidate);
+  $("buildLine").textContent = BUILD;
+  applyLang();
+  // live dataset slot: same-origin data/basins_eaton.json replaces training data
+  // when present and valid (deployed mode). Fails soft everywhere else.
+  if (typeof fetch === "function") {
+    fetch("data/basins_eaton.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : null).then(d => {
+      if (!d) return;
+      const v = validateDataset(d);
+      if (v.ok && d.provenance && d.provenance.mode !== "training") {
+        state.data = d; state.basinIdx = 0; state.live.hw = 0; renderAll();
+      }
+    }).catch(() => {});
+  }
+  if (typeof fetch === "function") {
+    const nowISO = new Date().toISOString();
+    fetch("data/rain_latest.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : null)
+      .then(d => { if (d) applyRain(d, nowISO); }).catch(() => {});
+    fetch("data/alerts_latest.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : null)
+      .then(d => { if (d) applyAlerts(d, nowISO); }).catch(() => {});
+  }
+  // test/QA handle (documented; read-only contract)
+  window.__arroyo = { state, ARROYO, validateDataset, validateRainSnapshot, validateAlertsSnapshot,
+    applyRain, applyAlerts, liveFeeds, runCanary, admTryPass, sha256Hex, T, STRINGS };
+}
+document.addEventListener("DOMContentLoaded", init);
+if (document.readyState !== "loading") init();
+</script>
+</body>
+</html>

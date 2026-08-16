@@ -1,0 +1,177 @@
+{
+ "meta": {
+  "purpose": "oracle for live-feed engine additions: snapshot staleness and i15-from-series",
+  "generated": "2026-08-15",
+  "tolerance": 1e-09,
+  "policy": {
+   "fresh_max_min": 45,
+   "stale_max_min": 360,
+   "note": "expired hides values; stale shows values with warning and disables read-rate"
+  }
+ },
+ "status_cases": [
+  {
+   "minutes": -10,
+   "status": "invalid"
+  },
+  {
+   "minutes": -0.01,
+   "status": "invalid"
+  },
+  {
+   "minutes": 0,
+   "status": "fresh"
+  },
+  {
+   "minutes": 1,
+   "status": "fresh"
+  },
+  {
+   "minutes": 44.99,
+   "status": "fresh"
+  },
+  {
+   "minutes": 45,
+   "status": "fresh"
+  },
+  {
+   "minutes": 45.01,
+   "status": "stale"
+  },
+  {
+   "minutes": 120,
+   "status": "stale"
+  },
+  {
+   "minutes": 359.99,
+   "status": "stale"
+  },
+  {
+   "minutes": 360,
+   "status": "stale"
+  },
+  {
+   "minutes": 360.01,
+   "status": "expired"
+  },
+  {
+   "minutes": 1440,
+   "status": "expired"
+  },
+  {
+   "minutes": "NaN",
+   "status": "invalid"
+  }
+ ],
+ "age_minutes_cases": [
+  {
+   "fetched": "2026-08-15T18:00:00Z",
+   "now": "2026-08-15T18:00:00Z",
+   "minutes": 0.0
+  },
+  {
+   "fetched": "2026-08-15T18:00:00Z",
+   "now": "2026-08-15T18:44:59Z",
+   "minutes": 44.983333333333
+  },
+  {
+   "fetched": "2026-08-15T18:00:00Z",
+   "now": "2026-08-15T19:00:00Z",
+   "minutes": 60.0
+  },
+  {
+   "fetched": "2026-08-15T12:00:00-07:00",
+   "now": "2026-08-15T19:30:00Z",
+   "minutes": 30.0
+  }
+ ],
+ "i15_series_cases": [
+  {
+   "label": "normal: latest finite 15-min total x4",
+   "series": [
+    {
+     "t": "T1",
+     "mm": 1.0
+    },
+    {
+     "t": "T2",
+     "mm": 2.5
+    }
+   ],
+   "expect": {
+    "mmh": 10.0,
+    "at": "T2"
+   }
+  },
+  {
+   "label": "trailing gap: skip null/NaN, use last finite",
+   "series": [
+    {
+     "t": "T1",
+     "mm": 3.0
+    },
+    {
+     "t": "T2",
+     "mm": null
+    },
+    {
+     "t": "T3",
+     "mm": null
+    }
+   ],
+   "expect": {
+    "mmh": 12.0,
+    "at": "T1"
+   }
+  },
+  {
+   "label": "negative interval is sensor garbage: skipped",
+   "series": [
+    {
+     "t": "T1",
+     "mm": 2.0
+    },
+    {
+     "t": "T2",
+     "mm": -0.3
+    }
+   ],
+   "expect": {
+    "mmh": 8.0,
+    "at": "T1"
+   }
+  },
+  {
+   "label": "all unusable -> null",
+   "series": [
+    {
+     "t": "T1",
+     "mm": null
+    },
+    {
+     "t": "T2",
+     "mm": -1
+    }
+   ],
+   "expect": null
+  },
+  {
+   "label": "empty -> null",
+   "series": [],
+   "expect": null
+  },
+  {
+   "label": "zero rain is a real reading",
+   "series": [
+    {
+     "t": "T1",
+     "mm": 0.0
+    }
+   ],
+   "expect": {
+    "mmh": 0.0,
+    "at": "T1"
+   }
+  }
+ ]
+}

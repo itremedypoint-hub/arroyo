@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "arroyo/basins_eaton.schema.json",
+  "title": "Arroyo basin dataset contract (Eaton, USGS PWFDF-derived)",
+  "description": "Contract for data/basins_eaton.json produced by scripts/build_basins.py. Validating against this schema is part of the Phase 1 acceptance gate: every threshold must trace to a USGS field, and no placeholder values may remain.",
+  "type": "object",
+  "required": ["provenance", "basins"],
+  "additionalProperties": false,
+  "properties": {
+    "provenance": {
+      "type": "object",
+      "required": ["source_url", "dataset_doi", "dataset_version", "spec_doi", "retrieved", "units", "built_by"],
+      "additionalProperties": true,
+      "properties": {
+        "source_url": { "type": "string", "pattern": "^https://" },
+        "dataset_doi": { "type": "string", "pattern": "^10\\.5066/" },
+        "dataset_version": { "type": "string", "minLength": 1, "examples": ["v1.0"] },
+        "spec_doi": { "type": "string", "const": "10.5066/P13KUWCO" },
+        "retrieved": { "type": "string", "format": "date" },
+        "units": {
+          "type": "object",
+          "required": ["i15"],
+          "properties": { "i15": { "const": "mm/h" } }
+        },
+        "built_by": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Script name + your name, e.g. 'build_basins.py (Bear)'. Keeps the authorship trail in the artifact itself."
+        }
+      }
+    },
+    "basins": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 15,
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "lat", "lon", "i15_mmh", "likelihood", "volume_class", "communities", "usgs_fields"],
+        "additionalProperties": true,
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9_\\-]+$" },
+          "name": { "type": "string", "minLength": 1 },
+          "lat": { "type": "number", "minimum": 34.0, "maximum": 34.4 },
+          "lon": { "type": "number", "minimum": -118.3, "maximum": -117.9 },
+          "i15_mmh": {
+            "type": "object",
+            "required": ["p50"],
+            "additionalProperties": false,
+            "properties": {
+              "p50": { "type": "number", "exclusiveMinimum": 2.0, "maximum": 80 },
+              "p75": { "type": "number", "exclusiveMinimum": 2.0, "maximum": 105 },
+              "p90": { "type": "number", "exclusiveMinimum": 2.0, "maximum": 130 }
+            },
+            "description": "Published USGS 15-min intensity thresholds in mm/h at design probabilities. p50 required. Bounds are sanity rails, not physics: a value outside them means re-check parsing and units before overriding. Lower bound intentionally sits above the 2.0 mm/h advisory floor so the tier ladder cannot invert."
+          },
+          "likelihood": { "type": "number", "minimum": 0, "maximum": 1 },
+          "volume_class": { "type": "integer", "minimum": 1, "maximum": 4 },
+          "communities": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "enum": ["Altadena", "Pasadena", "Sierra Madre", "Monrovia", "Arcadia", "La Canada Flintridge", "Kinneloa Mesa", "Unincorporated LA County"] }
+          },
+          "usgs_fields": {
+            "type": "object",
+            "required": ["segment_or_basin_id", "threshold_field_name"],
+            "properties": {
+              "segment_or_basin_id": { "type": "string", "minLength": 1 },
+              "threshold_field_name": { "type": "string", "minLength": 1 }
+            },
+            "description": "The traceability block: which PWFDF feature and which spec field each threshold came from. This is what lets a judge (or you, in February) reproduce any number on screen."
+          },
+          "runout": {
+            "type": "object",
+            "description": "Optional. If the Eaton fire has a child item in the USGS PWFDF-R runout collection, record the mapped downstream inundation reference here instead of a hand-joined guess.",
+            "properties": {
+              "source": { "type": "string" },
+              "notes": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

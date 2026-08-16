@@ -1,0 +1,10 @@
+# Cloudflare Pages headers. The meta CSP inside index.html covers most
+# directives; these add what meta cannot (frame-ancestors) and belt-and-
+# suspenders the rest. Single-file build requires 'unsafe-inline' for its
+# own script/style; the split-file upgrade path is in LAUNCH_README.md.
+/*
+  Content-Security-Policy: default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer
+  Permissions-Policy: geolocation=(), camera=(), microphone=()
+  Cache-Control: no-cache

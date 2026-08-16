@@ -1,0 +1,6 @@
+{
+  "_readme": "Copy to docs/stations.json and replace with REAL gauge ids you have verified once by hand. NWS ids from station pages on weather.gov; Synoptic STIDs from synopticdata.com metadata (LA County ALERT gauges are in their network). Names are what residents see.",
+  "nws": ["REPLACE_ME_STATION_ID"],
+  "synoptic": ["REPLACE_ME_STID"],
+  "names": {"REPLACE_ME_STATION_ID": "Human-readable gauge name"}
+}
