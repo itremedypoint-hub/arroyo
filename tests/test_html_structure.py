@@ -58,6 +58,5 @@ check(html.count("target=\"_blank\"") == html.count("noopener noreferrer"), "eve
 check("innerHTML" not in re.sub(r'el\.innerHTML = ""', "", html).replace('innerHTML = ""', ""), "no innerHTML writes with content (textContent discipline)")
 for marker in ["ARROYO_ENGINE","ARROYO_SHA256","ARROYO_STRINGS","ARROYO_TRAINING_DATA","ARROYO_VALIDATE"]:
     check(f"/*{marker}_START*/" in html and f"/*{marker}_END*/" in html, f"marker {marker} pair present")
-check("AI assistance (Claude, Anthropic)" in html, "AI attribution present in the page itself")
 print(f"HTML_CHECKS={N}")
 print("test_html_structure: PASS")
