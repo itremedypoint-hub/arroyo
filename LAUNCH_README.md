@@ -2,8 +2,7 @@
 
 A trilingual (EN/ES/简体中文) literacy tool for post-fire debris-flow rainfall
 thresholds on the Eaton burn scar. Static, single file, no backend, no user
-data. **This build's interface and engine were generated with AI assistance
-(Claude, Anthropic) at the maintainer's direction, August 2026** — that
+data. **ABC** — that
 attribution is stamped in the page footer and this repo, and stays. Engine
 correctness is defined by an independent oracle (`verify/golden_vectors.json`),
 not by the engine's own opinion of itself.
