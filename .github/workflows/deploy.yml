@@ -1,0 +1,33 @@
+name: verify-and-deploy
+on:
+  push: { branches: [main] }
+  workflow_dispatch: {}
+permissions: { contents: read, pages: write, id-token: write }
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm install jsdom
+      - run: make verify
+      - name: freshness gate (only once real data is present)
+        run: |
+          if [ -f site/data/basins_eaton.json ]; then
+            python3 scripts/ops_validate.py site/data/basins_eaton.json
+            python3 scripts/ops_freshness.py site/data/basins_eaton.json --require-live
+          else
+            echo "No live dataset yet — deploying in labeled TRAINING mode."
+          fi
+  deploy:
+    needs: verify
+    runs-on: ubuntu-latest
+    environment: { name: github-pages, url: ${{ steps.deployment.outputs.page_url }} }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with: { path: site }
+      - id: deployment
+        uses: actions/deploy-pages@v4
