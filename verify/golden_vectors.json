@@ -2,7 +2,7 @@
  "meta": {
   "purpose": "Independent oracle for Arroyo v2. Your engine (Python and JS) must reproduce these values to within tolerance. Mismatch means a bug on one side - find which.",
   "generated": "2026-08-15",
-  "generator": "",
+  "generator": "Computed independently by Claude (Anthropic) as a second-layer check; disclose as AI-provided verification data, not application code.",
   "tolerance": "abs diff <= 1e-9 for probabilities/ratios; exact match for tiers",
   "units": "R_accum = mm per 15 min; I/intensity/trigger = mm per hour; I_mmh = 4 x R_accum",
   "sources": [
