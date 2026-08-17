@@ -2,7 +2,8 @@
 
 A trilingual (EN/ES/简体中文) literacy tool for post-fire debris-flow rainfall
 thresholds on the Eaton burn scar. Static, single file, no backend, no user
-data. **ABC** — that
+data. **This build's interface and engine were generated with AI assistance
+(Claude, Anthropic) at the maintainer's direction, August 2026** — that
 attribution is stamped in the page footer and this repo, and stays. Engine
 correctness is defined by an independent oracle (`verify/golden_vectors.json`),
 not by the engine's own opinion of itself.
@@ -21,9 +22,11 @@ site/_headers            production headers for Cloudflare Pages
 scripts/build_basins.py  USGS GeoJSON → basins_eaton.json (the only threshold path)
 scripts/fetch_rain.py    CI: gauge snapshot (Synoptic 15-min / NWS hourly fallback)
 scripts/fetch_alerts.py  CI: active NWS flood/debris products, LA County filter
+scripts/discover_stations.py  find REAL gauge ids from the NWS/Synoptic APIs
+scripts/deploy_check.py  audit a deployed site from the outside
 scripts/ops_*.py         validate / freshness gate / link check
 verify/                  golden_vectors.json (oracle) + JSON schema
-tests/                   341+29 oracle checks · 329 DOM · 15 ingestion · 14 fetcher · 63 structural
+tests/                   403 oracle · 351 DOM · 15 ingestion · 14 fetcher · 72 structural = 840
 .github/workflows/       verify-gated GitHub Pages deploy
 Makefile                 make verify | serve | freshness | links
 ```
@@ -60,8 +63,10 @@ honesty, not to silence or stale confidence — that failure mode is the tested
 default, so leaving the workflow disabled is always safe.
 
 Setup, once:
-1. `cp docs/stations.example.json docs/stations.json` and put REAL gauge ids
-   in it — verify each one by hand the first time. With no Synoptic token the
+1. `make stations` (i.e. `scripts/discover_stations.py --write`) asks the NWS
+   API which stations actually serve the scar, keeps only those reporting
+   precipitation, and records each one's distance — so no placeholder id
+   ever reaches the config. Verify one by hand the first time. With no Synoptic token the
    fetcher uses keyless NWS hourly observations, which the UI labels
    "1-hour rate — smooths bursts; treat as a floor" (that honesty ships in
    three languages; don't remove it).
@@ -147,6 +152,13 @@ allows `'unsafe-inline'`. That is an acceptable posture for a no-input,
 no-secrets static page whose DOM writes are all `textContent`. If you later
 split `index.html` into `app.js` + `app.css`, tighten to
 `script-src 'self'; style-src 'self'` and drop `'unsafe-inline'`.
+
+Stations more than 8 km from the scar are labeled "valley station — not on
+the burn scar" in all three languages. Keep that label; the keyless route
+reaches only valley airports, and pretending otherwise would be the exact
+overclaim this project exists to avoid.
+
+Audit any deployment from outside with `make deploy-check URL=…`.
 
 ## Operating cadence (wet season)
 - **Monthly (Oct–Apr):** `make links` — a literacy page with a dead official
