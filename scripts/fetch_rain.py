@@ -148,8 +148,8 @@ def main():
             if not token:
                 sys.exit("SYNOPTIC_TOKEN not set; use --provider nws or set the secret.")
             stids = ",".join(cfg["synoptic"])
-            url = ("https://api.synopticdata.com/v2/stations/precip"
-                   f"?stid={stids}&pmode=intervals&interval=15&recent=90&units=metric&token={token}")
+            url = ("https://api.synopticdata.com/v2/stations/timeseries"
+                   f"?stid={stids}&recent=90&precip=1&units=metric&token={token}")
             stations = parse_synoptic(get(url), names)
             source = "synopticdata.com (15-min intervals)"
         else:
