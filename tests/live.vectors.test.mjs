@@ -29,3 +29,16 @@ test("i15 from a 15-minute series: gaps, garbage, zeros, emptiness", () => {
   }
 });
 test("count", () => { console.log(`LIVE_VECTOR_CHECKS=${N}`); assert.ok(N >= 25); });
+
+test("post-fire year counts wet seasons, not calendar years", () => {
+  for (const c of V.post_fire_year_cases) same(ARROYO.postFireYear(c.now, V.fire_iso), c.year);
+  same(ARROYO.postFireYear("not-a-date", V.fire_iso), null);
+});
+test("ring angle: Jan at 12 o'clock, 30°/month plus day fraction", () => {
+  for (const c of V.ring_angle_cases) near(ARROYO.ringAngleDeg(c.now), c.deg, 1e-9);
+  same(ARROYO.ringAngleDeg("nope"), null);
+});
+test("wet-season predicate (Nov–Mar)", () => {
+  for (const c of V.wet_season_cases) same(ARROYO.inWetSeason(c.now), c.wet);
+});
+test("count2", () => { console.log(`LIVE_VECTOR_CHECKS_TOTAL=${N}`); assert.ok(N >= 55); });

@@ -45,6 +45,7 @@ for need in ["lang","largeType","calm","modeBanner","basinChips","bName","bComm"
              "intensity","quick","ladder","readout","hwLine","curve","y2note","accEq",
              "preset","simStart","simStep","simExit","simOut","trainframe",
              "statusKV","selfCheckLine","buildLine","fnLangNote","fieldnotes",
+             "todayMark","ringYear","ringSeason","ringCap","ringDesc","y3note",
              "live","alertsCard","rainCard","alertsBody","rainBody",
              "admPass","admGo","admMsg","admLocked","admPanel","admSelftest","admInspect",
              "admExport","admDiag","admLock","admJson","admValidate","admOut"]:
@@ -52,11 +53,15 @@ for need in ["lang","largeType","calm","modeBanner","basinChips","bName","bComm"
 check("page" in ids, "#page canvas wrapper present")
 check(html.index('<div id="page">') < html.index("<main") < html.index("</footer>") < html.index("</div><!-- /#page -->"), "#page wraps all visible content")
 check("html,body{background:var(--ink) !important}" in html, "html/body canvas belt-and-suspenders")
+check("<noscript>" in html, "noscript fallback present")
+check("rotate(225" not in html, "no hardcoded season-ring rotation")
+check("August 15, in post-fire year two" not in html, "no hardcoded build date in the ring description")
 check("Content-Security-Policy" in html, "CSP meta present")
 check("frame-ancestors" not in html, "frame-ancestors correctly left to HTTP headers (meta cannot carry it)")
 check(html.count("target=\"_blank\"") == html.count("noopener noreferrer"), "every _blank link carries rel=noopener noreferrer")
 check("innerHTML" not in re.sub(r'el\.innerHTML = ""', "", html).replace('innerHTML = ""', ""), "no innerHTML writes with content (textContent discipline)")
 for marker in ["ARROYO_ENGINE","ARROYO_SHA256","ARROYO_STRINGS","ARROYO_TRAINING_DATA","ARROYO_VALIDATE"]:
     check(f"/*{marker}_START*/" in html and f"/*{marker}_END*/" in html, f"marker {marker} pair present")
+check("AI assistance (Claude, Anthropic)" in html, "AI attribution present in the page itself")
 print(f"HTML_CHECKS={N}")
 print("test_html_structure: PASS")

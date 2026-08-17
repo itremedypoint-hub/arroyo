@@ -36,14 +36,32 @@ test("visitor flow, sandbox isolation, admin gate, i18n", async () => {
   ok(!banner.hidden && /TRAINING/i.test(banner.textContent), "training banner visible and labeled");
   const chips = doc.querySelectorAll("#basinChips .chip");
   eq(chips.length, 8, "eight training basins");
-  eq(A.state.year, 2, "defaults to the season ahead (year 2)");
+  const expectYear = Math.min(Math.max(A.ARROYO.postFireYear(new Date().toISOString(), A.ARROYO.FIRE_ISO), 1), 2);
+  eq(A.state.year, expectYear, "default season derives from the calendar, clamped to the year-2 convention");
   ok(/12/.test(doc.getElementById("intensity").value), "default intensity 12");
   ok(doc.getElementById("selfCheckLine").textContent.includes("14/14"), "canary self-check 14/14 at load");
+  ok(doc.querySelector("footer").textContent.includes("AI assistance (Claude, Anthropic)"), "AI attribution present in footer");
   ok(doc.getElementById("page").contains(doc.querySelector("main")) && doc.getElementById("page").contains(doc.querySelector("footer")), "#page owns the visible canvas");
+
+  // -- season ring is runtime-dated, not frozen --
+  const nowISO = new Date().toISOString();
+  const pfy = A.ARROYO.postFireYear(nowISO, A.ARROYO.FIRE_ISO);
+  ok(doc.getElementById("ringYear").textContent.includes(String(pfy)), "ring shows the computed post-fire year");
+  const rot = doc.getElementById("todayMark").getAttribute("transform");
+  const deg = parseFloat(rot.replace("rotate(", ""));
+  ok(Math.abs(deg - A.ARROYO.ringAngleDeg(nowISO)) < 0.01, "today marker rotated to the computed angle");
+  ok(!/August 15|Aug 15/.test(doc.getElementById("ringDesc").textContent) || pfy === null,
+     "ring description no longer hardcodes a build date");
+  ok(doc.getElementById("ringCap").textContent.length > 0, "ring caption rendered");
+  eq(doc.getElementById("y3note").hidden, pfy < 3, "beyond-year-2 note appears only when the convention runs out");
+  ok(html.includes("<noscript>") && html.includes("NO JAVASCRIPT"), "noscript fallback present");
+  ok(html.indexOf("<noscript>") < html.indexOf('id="main"'), "noscript appears before the interactive content");
 
   // -- sandbox proof FIRST, while live high-water is still low (audit F4) --
   // At load: basin 0 (Eaton Canyon, p50 18 → y2 trigger 23.45), I=12 → advisory.
-  eq(A.ARROYO.TIER_ORDER[A.state.live.hw], "advisory", "live high-water starts at advisory");
+  const b0 = A.state.data.basins[0];
+  const expectTier = A.ARROYO.classify(b0.i15_mmh.p50, A.state.year, 12).tier;
+  eq(A.ARROYO.TIER_ORDER[A.state.live.hw], expectTier, "live high-water matches the engine at load");
   const hwBefore = A.state.live.hw;
   doc.getElementById("preset").value = "burst";
   doc.getElementById("simStart").click();
@@ -150,6 +168,11 @@ test("visitor flow, sandbox isolation, admin gate, i18n", async () => {
   eq(A.state.intensity, 26, "read-rate feeds the reader input");
   ok(doc.getElementById("intensity").value === "26", "input reflects the observed rate");
   ok(doc.getElementById("rainBody").textContent.includes("1-hour rate"), "coarser basis labeled honestly");
+  A.applyRain((() => { const s = rainSnap(5); s.stations[0].dist_km = 2.0; s.stations[1].dist_km = 13.4; return s; })(), NOW);
+  ok(doc.getElementById("rainBody").textContent.includes("2 km from the scar"), "near station shows distance");
+  ok(doc.getElementById("rainBody").textContent.includes("not on the burn scar"), "distant station labeled as valley, not scar");
+  ok(!doc.getElementById("rainBody").textContent.split("13 km")[0].includes("not on the burn scar"),
+     "the off-scar label attaches to the distant station, not the near one");
   // stale: values visible, action disabled
   A.applyRain(rainSnap(120), NOW);
   ok(doc.getElementById("rainBody").textContent.includes("STALE"), "stale stamp shown");
