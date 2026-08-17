@@ -1,0 +1,26 @@
+{
+  "_generated_by": "scripts/discover_stations.py",
+  "_scar_centroid": {
+    "lat": 34.19,
+    "lon": -118.1
+  },
+  "_note": "ids returned by the NWS/Synoptic APIs at generation time \u2014 verify one by hand before trusting the feed",
+  "nws": [],
+  "synoptic": [
+    "HNGC1",
+    "RWPC1",
+    "AU952",
+    "COOPMWSC1",
+    "MWSC1",
+    "SIRC1"
+  ],
+  "names": {
+    "HNGC1": "HENNINGER FLATS",
+    "RWPC1": "Eaton Postfire Gauge 1",
+    "AU952": "KC7O Sierra Madre",
+    "COOPMWSC1": "MT. WILSON CBS",
+    "MWSC1": "MT. WILSON CBS",
+    "SIRC1": "SIERRA MADRE #3374"
+  },
+  "coords": {}
+}
