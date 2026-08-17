@@ -184,6 +184,14 @@ footer .rails{margin:.8rem 0}
 </header>
 
 <div class="wrap">
+  <noscript>
+    <div class="banner">
+      <b>NO JAVASCRIPT</b> — the threshold reader, storm trainer, and live panels need JavaScript and will stay empty.
+      Everything that matters most still works below: <a href="#literacy">how to read a warning</a>,
+      <a href="#notes">the science in plain terms</a>, and <a href="#resources">resources</a>.
+      For rainfall thresholds, use the <a href="https://apps.usgs.gov/landslides/pwfdf/" target="_blank" rel="noopener noreferrer">USGS post-fire debris-flow dashboard</a> directly.
+    </div>
+  </noscript>
   <div class="banner" id="modeBanner" role="status">
     <b data-i18n="train.tag">TRAINING DATA</b> — <span data-i18n="train.body">the basin numbers below are synthetic examples for learning the interface. They are not USGS values. A maintainer loads the official USGS Eaton assessment before public use.</span>
   </div>
@@ -196,7 +204,7 @@ footer .rails{margin:.8rem 0}
   <div>
     <svg id="seasonRing" viewBox="0 0 220 220" width="100%" role="img" aria-labelledby="ringTitle ringDesc">
       <title id="ringTitle">Season ring</title>
-      <desc id="ringDesc">A twelve-month ring. The wet season, November through March, is marked in poppy gold. A marker shows today, August 15, in post-fire year two.</desc>
+      <desc id="ringDesc">A twelve-month ring. The wet season, November through March, is marked in poppy gold. A marker shows the current date.</desc>
       <circle cx="110" cy="110" r="86" fill="none" stroke="#3A4A63" stroke-width="10"/>
       <!-- wet season arc Nov 1 → Mar 31: Jan at 12 o'clock, clockwise, 30°/month.
            Nov 1 = 300°: (110+86·sin300, 110−86·cos300) = (35.5, 67)
@@ -205,12 +213,12 @@ footer .rails{margin:.8rem 0}
       <g font-family="ui-monospace,Menlo,monospace" font-size="9" fill="#9BA0A8" text-anchor="middle">
         <text x="110" y="16">JAN</text><text x="204" y="114">APR</text><text x="110" y="212">JUL</text><text x="16" y="114">OCT</text>
       </g>
-      <!-- today marker: Aug 15 ≈ month 7.5/12 → angle 225° from Jan-top clockwise -->
-      <g transform="rotate(225 110 110)"><circle cx="110" cy="24" r="7" fill="#F2EDE2"/></g>
-      <text x="110" y="102" text-anchor="middle" font-family="Georgia,serif" font-size="15" fill="#F2EDE2" data-i18n="ring.year">Post-fire year 2</text>
-      <text x="110" y="122" text-anchor="middle" font-size="10" fill="#C9C3B2" data-i18n="ring.season">wet season ahead: Nov–Mar</text>
+      <!-- today marker: rotation computed at runtime from the current date -->
+      <g id="todayMark" transform="rotate(0 110 110)"><circle cx="110" cy="24" r="7" fill="#F2EDE2"/></g>
+      <text id="ringYear" x="110" y="102" text-anchor="middle" font-family="Georgia,serif" font-size="15" fill="#F2EDE2"></text>
+      <text id="ringSeason" x="110" y="122" text-anchor="middle" font-size="10" fill="#C9C3B2"></text>
     </svg>
-    <p class="ring-cap" data-i18n="ring.cap">The Eaton scar’s second wet season begins this November.</p>
+    <p class="ring-cap" id="ringCap"></p>
   </div>
   <div>
     <p class="eyebrow" data-i18n="hero.eyebrow">Eaton burn scar · San Gabriel foothills</p>
@@ -240,6 +248,7 @@ footer .rails{margin:.8rem 0}
           <label><input type="radio" name="year" value="1"> <span data-i18n="reader.y1">2025–26 (year 1 · P50 trigger)</span></label>
           <label><input type="radio" name="year" value="2" checked> <span data-i18n="reader.y2">2026–27 (year 2 · P75 trigger)</span></label>
           <p class="hint" id="y2note"></p>
+          <p class="hint warn" id="y3note" hidden></p>
         </fieldset>
 
         <fieldset>
@@ -428,6 +437,7 @@ footer .rails{margin:.8rem 0}
   <div class="wrap">
     <p><b style="font-family:Georgia,serif">ARROYO</b> · <span data-i18n="tagline">The mountain’s seasons, on your street.</span></p>
     <p class="rails" data-i18n="foot.rails">No push alerts. No “you are safe.” Instrument data drives tiers; reports and photos never do. Every tier links to the official sources above.</p>
+    <p data-i18n="foot.ai">This site’s interface and engine were generated with AI assistance (Claude, Anthropic) at the maintainer’s direction, August 2026, and are verified against an included independent oracle. It is a community education project, not an official product of any agency.</p>
     <p class="num" id="buildLine"></p>
   </div>
 </footer>
@@ -486,6 +496,25 @@ const ARROYO = (() => {
       Math.cos(lat1 * r) * Math.cos(lat2 * r) * Math.sin((lon2 - lon1) * r / 2) ** 2;
     return 2 * R * Math.asin(Math.sqrt(a));
   }
+  // ---- calendar helpers (pure; oracle: verify/live_vectors.json) ----
+  // A "post-fire year" counts WET SEASONS since ignition, not calendar years:
+  // a season is labelled by the year it starts in (Jul boundary), so the
+  // 2026-27 season is year 2 for a January 2025 fire.
+  const FIRE_ISO = "2025-01-07T00:00:00Z";              // Eaton Fire ignition
+  const seasonStartYear = d => (d.getUTCMonth() >= 6 ? d.getUTCFullYear() : d.getUTCFullYear() - 1);
+  function postFireYear(nowISO, fireISO) {
+    const n = new Date(nowISO), f = new Date(fireISO || FIRE_ISO);
+    if (!isFinite(+n) || !isFinite(+f)) return null;
+    return seasonStartYear(n) - seasonStartYear(f);
+  }
+  // Ring geometry: Jan at 12 o'clock, clockwise, 30°/month + day fraction.
+  function ringAngleDeg(nowISO) {
+    const d = new Date(nowISO);
+    if (!isFinite(+d)) return null;
+    const days = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0)).getUTCDate();
+    return (d.getUTCMonth() + (d.getUTCDate() - 1) / days) * 30;
+  }
+  const inWetSeason = nowISO => { const m = new Date(nowISO).getUTCMonth(); return m >= 10 || m <= 2; };
   // ---- live-feed helpers (pure; oracle: verify/live_vectors.json) ----
   const LIVE = { FRESH_MAX_MIN: 45, STALE_MAX_MIN: 360 };
   const ageMinutes = (fetchedISO, nowISO) => (Date.parse(nowISO) - Date.parse(fetchedISO)) / 60000;
@@ -509,7 +538,8 @@ const ARROYO = (() => {
   return { B, CT, CF, CS, LN3, ADVISORY_FLOOR, WATCH_FRACTION, TIER_ORDER, LIVE,
            logit, sigmoid, y2factor, kFromThreshold, pCurve, m1P, m1R,
            accum15ToMmh, inchesToMm, thresholds, classify, haversineKm,
-           ageMinutes, snapshotStatus, i15FromSeries };
+           ageMinutes, snapshotStatus, i15FromSeries,
+           FIRE_ISO, postFireYear, ringAngleDeg, inWetSeason };
 })();
 /*ARROYO_ENGINE_END*/
 
@@ -567,7 +597,12 @@ en:{ skip:"Skip to content",
  "a11y.lang":"Language", "ctl.large":"Large type", "ctl.calm":"Calm motion",
  "train.tag":"TRAINING DATA", "train.body":"the basin numbers below are synthetic examples for learning the interface. They are not USGS values. A maintainer loads the official USGS Eaton assessment before public use.",
  "cand.tag":"CANDIDATE DATASET (session preview)", "cand.body":"a maintainer is previewing an unloaded dataset. Refresh to return to the shipped data.",
- "ring.year":"Post-fire year 2", "ring.season":"wet season ahead: Nov–Mar", "ring.cap":"The Eaton scar’s second wet season begins this November.",
+ "ring.year":"Post-fire year {n}", "ring.season":"wet season ahead: Nov–Mar", "ring.seasonNow":"wet season now: Nov–Mar",
+ "ring.cap":"On the Eaton scar, the wet season runs November through March.",
+ "ring.capNow":"The Eaton scar is in its wet season now.",
+ "ring.desc":"A twelve-month ring. The wet season, November through March, is marked in poppy gold. The marker shows today, {d}, in post-fire year {n}.",
+ "reader.y3note":"This is post-fire season {n}. Year 2 is the last season this convention covers — load an updated USGS assessment for anything beyond it.",
+ "live.dist":"{d} km from the scar", "live.offscar":"valley station — not on the burn scar",
  "hero.eyebrow":"Eaton burn scar · San Gabriel foothills", "hero.h1":"Read the mountain.",
  "hero.lede":"After a fire, burned slopes can turn heavy rain into debris flows. The USGS publishes the rainfall trigger for each canyon; the county and the National Weather Service issue the warnings. Arroyo teaches you to read all of it — what the trigger for your basin means, how close a storm is getting, and exactly which official alert to act on. In English, Spanish, and Chinese.",
  "hero.steps":"Three steps: pick your canyon, set a rain rate, read the ladder.",
@@ -634,6 +669,7 @@ en:{ skip:"Skip to content",
  "live.basis.i15":"15-min rate", "live.basis.1h":"1-hour rate — smooths bursts; treat as a floor",
  "live.use":"Read this rate", "live.until":"in effect until {t}", "live.obs":"observed {t}",
  "foot.rails":"No push alerts. No “you are safe.” Instrument data drives tiers; reports and photos never do. Every tier links to the official sources above.",
+ "foot.ai":"This site’s interface and engine were generated with AI assistance (Claude, Anthropic) at the maintainer’s direction, August 2026, and are verified against an included independent oracle. It is a community education project, not an official product of any agency."
 },
 es:{ skip:"Saltar al contenido",
  "rail.head":"Arroyo complementa las alertas oficiales — nunca las reemplaza.", "rail.act":"Actúa según:",
@@ -641,7 +677,12 @@ es:{ skip:"Saltar al contenido",
  "a11y.lang":"Idioma", "ctl.large":"Letra grande", "ctl.calm":"Menos movimiento",
  "train.tag":"DATOS DE ENTRENAMIENTO", "train.body":"los números de las cuencas son ejemplos sintéticos para aprender a usar la página. No son valores del USGS. El mantenedor carga la evaluación oficial del USGS antes del uso público.",
  "cand.tag":"CONJUNTO CANDIDATO (vista previa de sesión)", "cand.body":"el mantenedor está previsualizando un conjunto de datos sin publicar. Actualiza la página para volver a los datos originales.",
- "ring.year":"Año 2 tras el incendio", "ring.season":"temporada de lluvias: nov–mar", "ring.cap":"La segunda temporada de lluvias de la cicatriz del Eaton comienza este noviembre.",
+ "ring.year":"Año {n} tras el incendio", "ring.season":"temporada de lluvias por venir: nov–mar", "ring.seasonNow":"temporada de lluvias ahora: nov–mar",
+ "ring.cap":"En la cicatriz del Eaton, la temporada de lluvias va de noviembre a marzo.",
+ "ring.capNow":"La cicatriz del Eaton está en temporada de lluvias ahora.",
+ "ring.desc":"Un anillo de doce meses. La temporada de lluvias, de noviembre a marzo, está marcada en dorado. El marcador señala hoy, {d}, en el año {n} tras el incendio.",
+ "reader.y3note":"Esta es la temporada {n} tras el incendio. El año 2 es la última que cubre esta convención — carga una evaluación actualizada del USGS para lo que siga.",
+ "live.dist":"a {d} km de la cicatriz", "live.offscar":"estación del valle — no está en la zona quemada",
  "hero.eyebrow":"Cicatriz del incendio Eaton · Sierra de San Gabriel", "hero.h1":"Lee la montaña.",
  "hero.lede":"Después de un incendio, las laderas quemadas pueden convertir la lluvia intensa en flujos de escombros. El USGS publica el umbral de lluvia de cada cañón; el condado y el Servicio Meteorológico Nacional emiten las alertas. Arroyo te enseña a leerlo todo: qué significa el umbral de tu cuenca, qué tan cerca está la tormenta y exactamente qué alerta oficial seguir. En inglés, español y chino.",
  "hero.steps":"Tres pasos: elige tu cañón, fija una intensidad de lluvia, lee la escalera.",
@@ -708,6 +749,7 @@ es:{ skip:"Saltar al contenido",
  "live.basis.i15":"tasa de 15 min", "live.basis.1h":"tasa de 1 hora — suaviza las ráfagas; trátala como un mínimo",
  "live.use":"Leer esta tasa", "live.until":"vigente hasta {t}", "live.obs":"observado {t}",
  "foot.rails":"Sin notificaciones. Sin “estás a salvo”. Los niveles se calculan solo con datos de instrumentos; fotos y reportes nunca los mueven. Cada nivel enlaza a las fuentes oficiales de arriba.",
+ "foot.ai":"La interfaz y el motor de este sitio se generaron con asistencia de IA (Claude, Anthropic) bajo la dirección del mantenedor, agosto de 2026, y se verifican contra un oráculo independiente incluido. Es un proyecto educativo comunitario, no un producto oficial de ninguna agencia."
 },
 zh:{ skip:"跳到正文",
  "rail.head":"Arroyo 仅为官方警报的补充——绝不替代官方警报。", "rail.act":"请以此为准：",
@@ -715,7 +757,12 @@ zh:{ skip:"跳到正文",
  "a11y.lang":"语言", "ctl.large":"大字号", "ctl.calm":"减少动效",
  "train.tag":"训练数据", "train.body":"下方各流域的数字是用于学习界面的合成示例，并非 USGS 官方数值。维护者会在公开使用前载入 USGS 官方 Eaton 评估数据。",
  "cand.tag":"候选数据集（仅本次会话预览）", "cand.body":"维护者正在预览尚未发布的数据集。刷新页面即可恢复原始数据。",
- "ring.year":"火后第 2 年", "ring.season":"雨季：11 月至 3 月", "ring.cap":"Eaton 火烧迹地的第二个雨季将于今年 11 月开始。",
+ "ring.year":"火后第 {n} 年", "ring.season":"即将到来的雨季：11 月至 3 月", "ring.seasonNow":"当前处于雨季：11 月至 3 月",
+ "ring.cap":"在 Eaton 火烧迹地，雨季从 11 月持续到 3 月。",
+ "ring.capNow":"Eaton 火烧迹地目前正处于雨季。",
+ "ring.desc":"十二个月的环形图。11 月至 3 月的雨季以金色标出。标记点显示今天（{d}），处于火后第 {n} 年。",
+ "reader.y3note":"当前为火后第 {n} 个雨季。第 2 年是本约定适用的最后一年——之后请载入更新的 USGS 评估数据。",
+ "live.dist":"距火烧迹地 {d} 公里", "live.offscar":"山谷站点——不在火烧迹地上",
  "hero.eyebrow":"Eaton 火烧迹地 · 圣盖博山麓", "hero.h1":"读懂这座山。",
  "hero.lede":"山火过后，烧毁的山坡可能把强降雨变成泥石流。USGS 公布每条峡谷的降雨触发阈值；县政府和国家气象局负责发布警报。Arroyo 教你读懂这一切：你所在流域的阈值是什么意思、暴雨离它有多近、该按哪一条官方警报行动。提供英文、西班牙文和中文。",
  "hero.steps":"三步：选择峡谷，设定雨强，读阶梯。",
@@ -782,6 +829,7 @@ zh:{ skip:"跳到正文",
  "live.basis.i15":"15 分钟雨强", "live.basis.1h":"1 小时雨强——会抹平短时骤雨，只可视为下限",
  "live.use":"读取此雨强", "live.until":"有效至 {t}", "live.obs":"观测于 {t}",
  "foot.rails":"没有推送通知，没有“你是安全的”。分级只由仪器数据驱动；照片和传闻绝不参与。每个分级都链接到上方的官方来源。",
+ "foot.ai":"本站界面与计算引擎在维护者指导下由 AI（Anthropic 的 Claude）于 2026 年 8 月生成，并对照随附的独立验证基准进行核验。这是一个社区教育项目，不是任何机构的官方产品。"
 }};
 /*ARROYO_STRINGS_END*/
 
@@ -877,6 +925,8 @@ function validateRainSnapshot(s) {
     if (typeof st.rate_mmh !== "number" || !isFinite(st.rate_mmh) || st.rate_mmh < 0 || st.rate_mmh > 200)
       errs.push(at + "rate_mmh out of 0–200");
     if (!st.obs_time || !isFinite(Date.parse(st.obs_time))) errs.push(at + "obs_time not ISO");
+    if (st.dist_km !== undefined && (typeof st.dist_km !== "number" || !isFinite(st.dist_km) || st.dist_km < 0 || st.dist_km > 200))
+      errs.push(at + "dist_km out of 0–200");
   });
   return { ok: errs.length === 0, errs };
 }
@@ -944,7 +994,7 @@ const state = {
   data: TRAINING_DATA,
   candidate: false,
   basinIdx: 0,
-  year: 2,
+  year: Math.min(Math.max(ARROYO.postFireYear(new Date().toISOString(), ARROYO.FIRE_ISO) || 2, 1), 2),
   intensity: 12,
   live: { hw: 0 },                 // live-session escalation high-water (index into TIER_ORDER)
   sim: null,                        // sandboxed; created on Start, destroyed on Exit (audit F4)
@@ -990,6 +1040,26 @@ function buildQuick() {
     b.addEventListener("click", () => { state.intensity = v; $("intensity").value = v; renderReader(); });
     quick.appendChild(b);
   });
+}
+
+/* ---------- render: season ring (runtime-dated; no hardcoded 'today') ---------- */
+function renderRing() {
+  const nowISO = new Date().toISOString();
+  const n = ARROYO.postFireYear(nowISO, ARROYO.FIRE_ISO);
+  const wet = ARROYO.inWetSeason(nowISO);
+  const ang = ARROYO.ringAngleDeg(nowISO);
+  const mark = $("todayMark");
+  if (mark) mark.setAttribute("transform", "rotate(" + ang.toFixed(2) + " 110 110)");
+  const dateStr = new Date(nowISO).toLocaleDateString(state.lang === "zh" ? "zh-CN" : state.lang,
+    { month: "long", day: "numeric" });
+  if ($("ringYear")) $("ringYear").textContent = T("ring.year", { n: n });
+  if ($("ringSeason")) $("ringSeason").textContent = T(wet ? "ring.seasonNow" : "ring.season");
+  if ($("ringCap")) $("ringCap").textContent = T(wet ? "ring.capNow" : "ring.cap");
+  if ($("ringDesc")) $("ringDesc").textContent = T("ring.desc", { d: dateStr, n: n });
+  // Beyond year 2 the app's convention stops; say so rather than extrapolating.
+  const note = $("y3note");
+  if (note) { note.textContent = n >= 3 ? T("reader.y3note", { n: n }) : ""; note.hidden = n < 3; }
+  return n;
 }
 
 /* ---------- render: reader ---------- */
@@ -1224,6 +1294,15 @@ function renderRainCard() {
     const bs = document.createElement("td");
     const badge = document.createElement("span"); badge.className = "badge" + (g.basis === "1h" ? " train" : "");
     badge.textContent = T("live.basis." + g.basis); bs.appendChild(badge);
+    // Distance honesty: a valley ASOS 13 km away is not "rain on your canyon".
+    if (typeof g.dist_km === "number") {
+      const d = document.createElement("span"); d.className = "badge";
+      d.textContent = T("live.dist", { d: fmt(g.dist_km, 0) }); bs.appendChild(d);
+      if (g.dist_km > 8) {
+        const off = document.createElement("span"); off.className = "badge train";
+        off.textContent = T("live.offscar"); bs.appendChild(off);
+      }
+    }
     const act = document.createElement("td");
     const btn = document.createElement("button"); btn.className = "chip"; btn.type = "button";
     btn.textContent = T("live.use");
@@ -1354,7 +1433,7 @@ function admDiag() {
 }
 
 /* ---------- wiring ---------- */
-function renderAll() { renderBanner(); renderChips(); renderReader(); renderStatus(); simRender(); renderLive(); }
+function renderAll() { renderBanner(); renderRing(); renderChips(); renderReader(); renderStatus(); simRender(); renderLive(); }
 function init() {
   // language
   $("lang").addEventListener("change", e => { state.lang = e.target.value; store.set("arroyo.lang", state.lang); applyLang(); });
