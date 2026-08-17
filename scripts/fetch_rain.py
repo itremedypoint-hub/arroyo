@@ -29,6 +29,15 @@ from datetime import datetime, timezone
 
 UA = {"User-Agent": "arroyo-community (maintainer contact in repo)", "Accept": "application/json"}
 MAX_RATE = 200.0
+SCAR = (34.19, -118.10)          # Eaton burn scar centroid, for distance labeling
+
+
+def haversine_km(a, b):
+    import math
+    R, r = 6371.0088, math.pi / 180
+    dlat, dlon = (b[0] - a[0]) * r, (b[1] - a[1]) * r
+    x = math.sin(dlat / 2) ** 2 + math.cos(a[0] * r) * math.cos(b[0] * r) * math.sin(dlon / 2) ** 2
+    return 2 * R * math.asin(math.sqrt(x))
 
 
 def now_iso():
@@ -152,6 +161,17 @@ def main():
                 except Exception as e:
                     print(f"WARN: {sid}: {e}", file=sys.stderr)
             source = "api.weather.gov (hourly observations)"
+
+    coords = {}
+    if not a.fixture:
+        try:
+            coords = json.load(open(a.stations)).get("coords", {})
+        except Exception:
+            coords = {}
+    for st in stations:
+        c = coords.get(st["id"]) or ([st.get("lat"), st.get("lon")] if st.get("lat") is not None else None)
+        if c and c[0] is not None:
+            st["dist_km"] = round(haversine_km(SCAR, (float(c[0]), float(c[1]))), 1)
 
     kept = []
     for st in stations:
