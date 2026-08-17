@@ -100,12 +100,13 @@ def main():
     for r in nws:
         print(f"{r['id']:10s} {r['km']:6.1f}  {'yes' if r['reports_precip'] else 'no ':8s} {r['name']}")
     usable = [r for r in nws if r["reports_precip"]][:a.limit]
-    if not usable:
-        sys.exit("\nNo nearby station reports hourly precipitation. Widen --limit, or use --synoptic.")
     far = [r for r in usable if r["km"] > OFFSCAR_KM]
-    print(f"\n{len(usable)} usable station(s). "
-          f"{len(far)} of them sit more than {OFFSCAR_KM:.0f} km from the scar and the site will label "
-          f"them 'valley station — not on the burn scar'.")
+    if usable:
+        print(f"\n{len(usable)} usable NWS station(s). "
+              f"{len(far)} of them sit more than {OFFSCAR_KM:.0f} km from the scar and the site will label "
+              f"them 'valley station — not on the burn scar'.")
+    else:
+        print("\nNo NWS station reports hourly precipitation.")
 
     syn = []
     if a.synoptic:
@@ -117,6 +118,10 @@ def main():
             print(f"\nSynoptic stations within {a.radius_km:.0f} km reporting precipitation:")
             for r in syn:
                 print(f"  {r['stid']:10s} {r['km']:6.1f} km  {r['name']}")
+
+    if not usable and not syn:
+        sys.exit("\nNo nearby station reports hourly precipitation via NWS or Synoptic. "
+                  "Try widening --radius-km, or double-check SYNOPTIC_TOKEN.")
 
     cfg = {"_generated_by": "scripts/discover_stations.py",
            "_scar_centroid": {"lat": SCAR[0], "lon": SCAR[1]},
