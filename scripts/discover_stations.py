@@ -73,14 +73,18 @@ def discover_nws(limit):
 
 def discover_synoptic(token, radius_km, limit):
     q = urllib.parse.urlencode({"radius": f"{SCAR[0]},{SCAR[1]},{int(radius_km * 0.621371)}",
-                                "vars": "precip_accum_15_minute,precip_accum_one_hour",
+                                "vars": "precip_accum_one_hour,precip_accum",
+                                "varsoperator": "or",
                                 "status": "active", "limit": limit, "token": token})
-    data = get(f"https://api.synopticdata.com/v2/stations/metadata?{q}", {"User-Agent": UA["User-Agent"]})
+    url = f"https://api.synopticdata.com/v2/stations/metadata?{q}"
+    print(f"\n[debug] requesting: {url.replace(token, 'TOKEN_HIDDEN')}", file=sys.stderr)
+    data = get(url, {"User-Agent": UA["User-Agent"]})
+    print(f"[debug] raw response: {json.dumps(data)[:2000]}", file=sys.stderr)
     rows = []
     for st in data.get("STATION", []):
         lat, lon = float(st["LATITUDE"]), float(st["LONGITUDE"])
         rows.append({"stid": st["STID"], "name": st.get("NAME"), "network": st.get("MNET_ID"),
-                     "km": round(haversine_km(SCAR, (lat, lon)), 1)})
+                     "km": round(haversine_km(SCAR, (lat, lon)), 1), "lat": lat, "lon": lon})
     rows.sort(key=lambda r: r["km"])
     return rows
 
