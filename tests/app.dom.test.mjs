@@ -40,7 +40,7 @@ test("visitor flow, sandbox isolation, admin gate, i18n", async () => {
   eq(A.state.year, expectYear, "default season derives from the calendar, clamped to the year-2 convention");
   ok(/12/.test(doc.getElementById("intensity").value), "default intensity 12");
   ok(doc.getElementById("selfCheckLine").textContent.includes("14/14"), "canary self-check 14/14 at load");
-  ok(doc.querySelector("footer").textContent.includes("AI assistance (Claude, Anthropic)"), "AI attribution present in footer");
+  ok(doc.querySelector("footer").textContent.includes("No push alerts"), "footer rails copy present");
   ok(doc.getElementById("page").contains(doc.querySelector("main")) && doc.getElementById("page").contains(doc.querySelector("footer")), "#page owns the visible canvas");
 
   // -- season ring is runtime-dated, not frozen --
